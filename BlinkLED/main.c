@@ -1,5 +1,19 @@
-/* Blink on RPUftdi 
- * blink the LED and toggle some IO for testing.
+/* RPUftdi blink
+ * Copyright (C) 2016 Ronald Sutherland
+ *
+ * This Library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This Library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License 
+ * along with the Arduino DigitalIO Library.  If not, see
+ * <http://www.gnu.org/licenses/>.
  */ 
 
 #include <util/delay.h>
@@ -13,47 +27,27 @@ static unsigned long blink_started_at;
 int main(void)
 {
     pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(FTDI_nRTS, INPUT);
-    pinMode(FTDI_nCTS, OUTPUT);
-    digitalWrite(FTDI_nCTS, LOW);
-    pinMode(FTDI_nDTR, INPUT);
-    pinMode(FTDI_nDSR, OUTPUT);
-    digitalWrite(FTDI_nDSR, LOW);
-    pinMode(RX_nRE, OUTPUT);
-    digitalWrite(RX_nRE, LOW); // enable RX pair receiver
-    pinMode(RX_DE, OUTPUT);
-    digitalWrite(RX_DE, HIGH); // enable RX pair driver
-    pinMode(TX_nRE, OUTPUT);
-    digitalWrite(TX_nRE, LOW); // enable TX pair receiver
-    pinMode(TX_DE, OUTPUT);
-    digitalWrite(TX_DE, HIGH); // enable TX pair driver
-    pinMode(DTR_nRE, OUTPUT);
-    digitalWrite(DTR_nRE, LOW); // enable DTR pair receiver
-    pinMode(DTR_DE, OUTPUT);
-    digitalWrite(DTR_DE, HIGH); // enable DTR pair driver
-    pinMode(DTR_TXD, OUTPUT);
-    digitalWrite(DTR_TXD, LOW); // transmit a false to DTR_TX so that DTR_DE can toggle the DTR driver.
-    pinMode(SS, INPUT); // warning SS is connecte to Arduino nRESET
+    digitalWrite(LED_BUILTIN, LOW);      // turn the LED on by sinking current
     
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
 
     sei(); // Enable global interrupts to start TIMER0
 
+    blink_started_at = millis();
+
     while (1) 
     {
         unsigned long kRuntime = 0;
         
-        digitalWrite(LED_BUILTIN, LOW);      // turn the LED on by sinking current
-        blink_started_at = millis();
-        while (kRuntime <= 100) // wait for 1/10 second
+        kRuntime = millis() - blink_started_at;
+        
+        if (kRuntime > 1000) 
         {
-            kRuntime = millis() - blink_started_at;
+            digitalToggle(LED_BUILTIN);
+            
+            // next toggle 
+            blink_started_at += 1000; 
         }
-        digitalToggle(LED_BUILTIN);       // toggle the LED off
-        digitalWrite(FTDI_nCTS, !digitalRead(FTDI_nCTS));  // toggle CTS for DMM
-        digitalWrite(FTDI_nDSR, !digitalRead(FTDI_nDSR));  // toggle DSR for DMM
-        digitalWrite(DTR_DE, !digitalRead(DTR_DE));  // toggle DTR driver, and watch input current
-        _delay_ms(1900);              // wait for 19/10 second
-    }    
+    }
 }
 

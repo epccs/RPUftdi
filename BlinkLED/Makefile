@@ -40,9 +40,8 @@ $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 	rm -f $(TARGET).elf
 
-## http://eleccelerator.com/fusecalc/fusecalc.php?chip=atmega328p&LOW=FF&HIGH=DE&EXTENDED=05&LOCKBIT=2F
 ## stk500v1 is for Arduino as ISP (e.g. it is an example in the Arduino.cc IDE 1.6.7+)
-## to reduce dupliction I only show the fuse setting in ../Bootloader
+## to reduce dupliction I set the fuse from ../Bootloader
 
 ## 328p can lock the bootloader section, which is a good idea even if it is not used
 isp: $(TARGET).hex

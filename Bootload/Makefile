@@ -4,7 +4,7 @@ TARGET = Bootload
 LIBDIR = ../lib
 OBJECTS = 
 
-## The Arduino as ISP sketch is loaded in an Uno that shows as /dev/ttyACMx
+## The ArduinoISP sketch is loaded in an Uno that shows as /dev/ttyACMx
 ##/dev/ttyACM0
 
 all:

@@ -35,6 +35,7 @@ static uint8_t txBufferLength = 0;
 #define FAST_DELAY_MILSEC 500
 #define SLOW_DELAY_MILSEC 2000
 static unsigned long blink_started_at;
+
 #define NOTHING 0
 #define FAST 1
 #define SLOW 2
@@ -64,7 +65,7 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
     blink_delay = FAST;
 }
 
-// the function is called when I2C data is requested..
+// the function is called when I2C data is requested.
 // twi_attachSlaveTxEvent is wrapped in the Wire::onRequest() C++ class.
 // so they don't just work the same, they are the same but with less overhead.
 void slaveTransmit(void) 
@@ -88,23 +89,20 @@ int main(void)
     pinMode(FTDI_nDTR, INPUT);
     pinMode(FTDI_nDSR, OUTPUT);
     digitalWrite(FTDI_nDSR, LOW);
-    pinMode(RX_nRE, OUTPUT);
-    digitalWrite(RX_nRE, LOW); // enable RX pair receiver
     pinMode(RX_DE, OUTPUT);
-    digitalWrite(RX_DE, HIGH); // enable RX pair driver
-    pinMode(TX_nRE, OUTPUT);
-    digitalWrite(TX_nRE, LOW); // enable TX pair receiver
+    digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
     pinMode(TX_DE, OUTPUT);
-    digitalWrite(TX_DE, HIGH); // enable TX pair driver
+    digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
     pinMode(DTR_nRE, OUTPUT);
     digitalWrite(DTR_nRE, HIGH); // disable DTR pair receiver
     pinMode(DTR_DE, OUTPUT);
     digitalWrite(DTR_DE, LOW); // disable DTR pair driver
     pinMode(DTR_TXD, OUTPUT);
     digitalWrite(DTR_TXD, HIGH); // transmit a true on DTR_TX pair, which is default for serial.
-    pinMode(SS, INPUT); // warning SS is connecte to Arduino nRESET
-    pinMode(nDTR, OUTPUT);
-    digitalWrite(nDTR, HIGH); // start with a high and look for falling edge on FTDI_nDTR
+    pinMode(nSS, OUTPUT); // nSS is input to a Open collector buffer used to pull to MCU nRESET low
+    digitalWrite(nSS, HIGH); 
+
+    uint8_t activate_bootloader = 0;
 
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
 
@@ -112,7 +110,7 @@ int main(void)
     blink_started_at = millis();
 
     twi_setAddress(SLAVE_ADDRESS);
-    twi_attachSlaveTxEvent(slaveTransmit); // called when I2C data is requested
+    twi_attachSlaveTxEvent(slaveTransmit); // called when I2C data is requested 
     twi_attachSlaveRxEvent(receiveEvent); // slave receive
     twi_init(false); // do not use internal pull-up
 
@@ -122,39 +120,46 @@ int main(void)
     {
         unsigned long kRuntime;
         
-        if ( !digitalRead(FTDI_nDTR) )         // both FTDI_nDTR and FTDI_nRTS work for this and are active low
-        { 
-            digitalWrite(nDTR, LOW);             // copy to nDTR
-        }
-        else
-        {
-            digitalWrite(nDTR, HIGH);             // copy to nDTR
-        }
-        
-        // delay between blink toggle
         kRuntime= millis() - blink_started_at;
+
         switch(blink_delay)
         {
             case NOTHING:
                 digitalWrite(LED_BUILTIN, HIGH);      // turn the LED off
                 break;
-            case FAST:
+            case FAST: // I2C data received
                 if ((kRuntime) > ((unsigned long)FAST_DELAY_MILSEC))
                 {
                     digitalToggle(LED_BUILTIN);
                     blink_started_at = millis();
                 }
                 break;
-            case SLOW:
+            case SLOW: // Startup state
                 if ((kRuntime) > ((unsigned long)SLOW_DELAY_MILSEC))
                 {
                     digitalToggle(LED_BUILTIN);
                     blink_started_at = millis();
                 }
                 break;
-            case REPLETE:
+            case REPLETE: // I2C data was requested
                 digitalWrite(LED_BUILTIN, LOW);      // turn the LED on by sinking current
                 continue;
+        }
+
+        if ( !digitalRead(FTDI_nDTR) )  // both FTDI_nDTR and FTDI_nRTS are set (active low) when avrdude tries to use the bootloader
+        { 
+            if (!activate_bootloader)
+            {
+                activate_bootloader =1;
+                digitalWrite(nSS, LOW);   // nSS goes through a open collector buffer to nRESET
+                _delay_ms(20);  // hold reset low for a short time 
+                digitalWrite(nSS, HIGH); // this will release the buffer with open colllector on MCU nRESET.
+                blink_delay = NOTHING;
+            }
+        }
+        else
+        {
+            activate_bootloader =0;
         }
     }
 }

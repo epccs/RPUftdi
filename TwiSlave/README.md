@@ -1,10 +1,10 @@
 # TWI/I2C slave 
 
-the bus manager is sat as Host to Local so that an I2C slave mode can be evaluated 
+Like Host2Local but add I2C slave that will echo
 
 ## Overview
 
-See Host2Local for info on bus setup.
+See Host2Local for bus notes.
 
 The I2C will echo the bytes, so just send some data and read it back.
 
@@ -19,7 +19,7 @@ Now connect with picocom (or ilk).
 picocom -b 115200 /dev/ttyUSB0
 ``` 
 
-Try the following commands and check that the JSON is as expected (The I2C slave will echo the bytes, so just send some data and read it back).
+Try the following commands and check that the JSON is as expected (The I2C slave will echo the bytes).
 
 ``` 
 /0/id?

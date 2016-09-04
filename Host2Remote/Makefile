@@ -3,7 +3,11 @@
 # to see the implicit rules which automagicly turn blinkLED.c into blinkLED.o run
 # make -p
 TARGET = Host2Remote
-OBJECTS = main.o
+LIBDIR = ../lib
+OBJECTS = main.o \
+	$(LIBDIR)/uart.o \
+	$(LIBDIR)/timers.o
+
 
 ## Chip and project-specific global definitions
 MCU   =  atmega328p

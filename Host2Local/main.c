@@ -19,7 +19,7 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../lib/pin_num.h"
 #include "../lib/pins_board.h"
 
-#define BLINK_DELLY 500
+#define BLINK_DELAY 500
 
 static unsigned long blink_started_at;
 
@@ -60,12 +60,12 @@ int main(void)
         
         kRuntime = millis() - blink_started_at;
         
-        if ( (kRuntime > BLINK_DELLY) & activate_bootloader)
+        if ( (kRuntime > BLINK_DELAY) & activate_bootloader)
         {
             digitalToggle(LED_BUILTIN);
             
             // next toggle 
-            blink_started_at += BLINK_DELLY; 
+            blink_started_at += BLINK_DELAY; 
         }
         
         if ( !digitalRead(FTDI_nDTR) )  // both FTDI_nDTR and FTDI_nRTS are set (active low) when avrdude tries to use the bootloader

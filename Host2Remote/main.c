@@ -62,18 +62,20 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
         txBuffer[i] = inBytes[i];    
     }
     txBufferLength = numBytes;
-    
-    if ( (txBuffer[0] == 0) && ( txBufferLength > 1) ) // TWI command to read RPU_ADDRESS
+    if (txBufferLength > 1)
     {
-        txBuffer[1] = RPU_ADDRESS;
-    }
-    if ( (txBuffer[0] == 6) && ( txBufferLength > 1) ) // TWI command to read error status
-    {
-        txBuffer[1] = error_status;
-    }
-    if ( (txBuffer[0] == 7) && ( txBufferLength > 1) ) // TWI command to set/clear error status
-    {
-        error_status = txBuffer[1];
+        if ( (txBuffer[0] == 0) ) // TWI command to read RPU_ADDRESS
+        {
+            txBuffer[1] = RPU_ADDRESS; // '0' is 0x30
+        }
+        if ( (txBuffer[0] == 6) ) // TWI command to read error status
+        {
+            txBuffer[1] = error_status;
+        }
+        if ( (txBuffer[0] == 7) ) // TWI command to set/clear error status
+        {
+            error_status = txBuffer[1];
+        }
     }
 }
 
@@ -102,7 +104,7 @@ void setup(void)
     pinMode(RX_nRE, OUTPUT);
     digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
     pinMode(TX_DE, OUTPUT);
-    digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
+    digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
     pinMode(TX_nRE, OUTPUT);
     digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
     pinMode(DTR_DE, OUTPUT);
@@ -219,11 +221,11 @@ void check_uart(void)
                     lockout_started_at = millis();
                 }
                 else
-                {
-                    digitalWrite(RX_DE, LOW); // disallow RX pair driver to enable if HOST_TX is low
+                {                                       // do not block the ftdi host from sending data, only lockout the local MCU
+                    digitalWrite(RX_DE, LOW); // allow RX pair driver to enable if FTDI_TX is low
                     digitalWrite(RX_nRE, HIGH);  // disable RX pair recevior to output to local MCU's RX input
                     digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
-                    digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior to output to HOST_RX input
+                    digitalWrite(TX_nRE, HIGH);  // enable TX pair recevior to output to FTDI_RX input
                     activate_lockout =1;
                     lockout_started_at = millis();
                 }

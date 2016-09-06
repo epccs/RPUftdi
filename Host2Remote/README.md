@@ -22,7 +22,7 @@ When DTR toggles an address byte will be sent out over the DTR pair. If the addr
 
 The I2C address is 0x29 (dec 41). It is organized as an array of read or write commands.
 
-0: reads this shields RPU_BUS addrss
+0: reads this shields RPU_BUS addrss (default is '0')
 1: writes this shields RPU_BUS address (not implemented)
 2: reads the address sent when DTR/RTS toggles (not implemented)
 3: writes the address to send when DTR/RTS toggles (not implemented)
@@ -43,8 +43,8 @@ Using i2c-debug on an RPUno the address can be read.
 /0/buffer 0,255
 {"txBuffer":[{"data":"0x0"},{"data":"0xFF"}]}
 /0/read? 2
-{"rxBuffer":[{"data":"0x0"},{"data":"0x0"}]}
+{"rxBuffer":[{"data":"0x0"},{"data":"0x30"}]}
 ``` 
 
-Note: the sent data is used to size the reply, so the extra 255 at the end of txBuffer is replaced by the I2C slave with the address zero.  
+Note: the sent data is used to size the reply, so the extra 255 at the end of txBuffer is replaced by the I2C slave with the value 0x30 which is ascii '0'.  
 

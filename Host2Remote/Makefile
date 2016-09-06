@@ -6,7 +6,8 @@ TARGET = Host2Remote
 LIBDIR = ../lib
 OBJECTS = main.o \
 	$(LIBDIR)/uart.o \
-	$(LIBDIR)/timers.o
+	$(LIBDIR)/timers.o \
+	$(LIBDIR)/twi.o
 
 
 ## Chip and project-specific global definitions

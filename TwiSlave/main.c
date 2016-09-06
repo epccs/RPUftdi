@@ -25,7 +25,7 @@ I have modified my ..lib\twi.c therefor this program will not work with the one 
 #include "../lib/pin_num.h"
 #include "../lib/pins_board.h"
 
-#define  SLAVE_ADDRESS 0x29  //slave address, use numbers between 0x08 to 0x78
+#define  TWI_ADDRESS 0x29  //slave address, use numbers between 0x08 to 0x78
 
 static uint8_t rxBuffer[TWI_BUFFER_LENGTH];
 static uint8_t rxBufferLength = 0;
@@ -109,7 +109,7 @@ int main(void)
     blink_delay = SLOW;
     blink_started_at = millis();
 
-    twi_setAddress(SLAVE_ADDRESS);
+    twi_setAddress(TWI_ADDRESS);
     twi_attachSlaveTxEvent(slaveTransmit); // called when I2C data is requested 
     twi_attachSlaveRxEvent(receiveEvent); // slave receive
     twi_init(false); // do not use internal pull-up

@@ -23,11 +23,13 @@ http://www.gnu.org/licenses/gpl-2.0.html
 
 //slave address, use numbers between 0x08 to 0x78
 #define TWI_ADDRESS 0x29
-// 0x30 is ascii char for the letter zero, which may be used as second char of command e.g. /0/id?
+// 0x30 is ascii char for the letter zero, this is the local address on RPU_BUS
 #define RPU_ADDRESS '0'  
-// default address sent on DTR pair when FTDI_nDTR toggles
-#define RPU_ADDRESS_TO_BOOTLOAD '0' 
-// return to normal mode address sent on DTR pair (haha... no it is not oFF it is a hex value)
+// Byte to send on DTR pair when FTDI_nDTR is active, it is the default address to reset.
+#define RPU_HOST_CONNECT '0' 
+// byte sent on DTR pair when FTDI_nDTR is no longer active
+#define RPU_HOST_LOCKED ~RPU_HOST_CONNECT
+// return to normal mode, remove lockout. Byte sent on DTR pair
 #define RPU_NORMAL_MODE 0xFF
 
 static uint8_t rxBuffer[TWI_BUFFER_LENGTH];
@@ -35,22 +37,28 @@ static uint8_t rxBufferLength = 0;
 static uint8_t txBuffer[TWI_BUFFER_LENGTH];
 static uint8_t txBufferLength = 0;
 
-#define BLINK_BOOTLD_DELAY 500
+#define BOOTLOADER_ACTIVE 2000
+#define BLINK_BOOTLD_DELAY 75
+#define BLINK_ACTIVE_DELAY 500
 #define BLINK_LOCKOUT_DELAY 2000
 #define BLINK_ERROR_DELAY 200
-#define VERIFY_UART_DELAY 500
+#define UART_TTL 500
 #define LOCKOUT_DELAY 30000
 
 static unsigned long blink_started_at;
 static unsigned long lockout_started_at;
 static unsigned long uart_started_at;
+static unsigned long bootloader_started_at;
 
-static uint8_t activate_bootloader;
+static uint8_t bootloader_started;
+static uint8_t host_active;
 static uint8_t bootloader_address; 
 static uint8_t activate_lockout;
-static uint8_t transmitted_uart;
+static uint8_t uart_has_TTL;
+static uint8_t controlled_by_remote;
 
 volatile uint8_t error_status;
+volatile uint8_t uart_output;
 
 // called when I2C data is received. 
 void receiveEvent(uint8_t* inBytes, int numBytes) 
@@ -84,12 +92,13 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
         }
         if ( (txBuffer[0] == 5) ) // send RPU_NORMAL_MODE on DTR pair
         {
-            if ( !(transmitted_uart) )
+            if ( !(uart_has_TTL) )
             {
                 // send a byte to the UART output
                 uart_started_at = millis();
-                printf("%c", RPU_NORMAL_MODE); 
-                transmitted_uart = 1;
+                uart_output = RPU_NORMAL_MODE;
+                printf("%c", uart_output); 
+                uart_has_TTL = 1;
             }
         }
         if ( (txBuffer[0] == 6) ) // TWI command to read error status
@@ -117,10 +126,10 @@ void setup(void)
 {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
-    pinMode(FTDI_nRTS, INPUT);
+    pinMode(FTDI_nRTS, INPUT); // FTDI's UART bridg should pull this down when host is active
     pinMode(FTDI_nCTS, OUTPUT);
     digitalWrite(FTDI_nCTS, LOW);
-    pinMode(FTDI_nDTR, INPUT);
+    pinMode(FTDI_nDTR, INPUT); // FTDI's UART bridg should pull this down when host is active (I've seen it stuck low, and need a power cycle)
     pinMode(FTDI_nDSR, OUTPUT);
     digitalWrite(FTDI_nDSR, LOW);
     pinMode(RX_DE, OUTPUT);
@@ -132,14 +141,14 @@ void setup(void)
     pinMode(TX_nRE, OUTPUT);
     digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
     pinMode(DTR_DE, OUTPUT);
-    digitalWrite(DTR_DE, LOW);  // disallow DTR pair driver to enable if DTR_TXD is low
+    digitalWrite(DTR_DE, LOW);  // seems to be a startup glitch ??? so disallow DTR pair driver to enable if DTR_TXD is low
     pinMode(nSS, OUTPUT); // nSS is input to a Open collector buffer used to pull to MCU nRESET low
     digitalWrite(nSS, HIGH); 
 
-    bootloader_address =RPU_ADDRESS_TO_BOOTLOAD; 
-    activate_bootloader = 0;
+    bootloader_address = RPU_HOST_CONNECT; 
+    host_active = 0;
     activate_lockout = 0;
-    transmitted_uart = 0;
+    uart_has_TTL = 0;
     error_status = 0;
 
     //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
@@ -154,32 +163,40 @@ void setup(void)
     twi_init(false); // do not use internal pull-up
 
     sei(); // Enable global interrupts to start TIMER0 and UART
-
-    uart0_flush(); // dump the transmit buffer
+    
+    _delay_ms(50); // wait for UART glitch to clear
     digitalWrite(DTR_DE, HIGH);  // allow DTR pair driver to enable if DTR_TXD is low
 }
 
-// blink if the bootloader has been activated or fast blink if error status is set
+// blink if the host is active, fast blink if error status, slow blink in lockout
 void blink_on_activate(void)
 {
     unsigned long kRuntime = millis() - blink_started_at;
     
     if (!error_status) 
     {
-        if ( activate_bootloader  && (kRuntime > BLINK_BOOTLD_DELAY) )
+        if ( bootloader_started  && (kRuntime > BLINK_BOOTLD_DELAY) )
         {
             digitalToggle(LED_BUILTIN);
             
             // next toggle 
             blink_started_at += BLINK_BOOTLD_DELAY; 
         }
-        if ( activate_lockout  && (kRuntime > BLINK_LOCKOUT_DELAY) )
+        else if ( activate_lockout  && (kRuntime > BLINK_LOCKOUT_DELAY) )
         {
             digitalToggle(LED_BUILTIN);
             
             // next toggle 
             blink_started_at += BLINK_LOCKOUT_DELAY; 
         }
+        else if ( host_active  && (kRuntime > BLINK_ACTIVE_DELAY) )
+        {
+            digitalToggle(LED_BUILTIN);
+            
+            // next toggle 
+            blink_started_at += BLINK_ACTIVE_DELAY; 
+        }
+        // else spin the loop
     }
     else
     {
@@ -193,22 +210,47 @@ void blink_on_activate(void)
     }
 }
 
-void check_DTR(void)
+void check_Bootload_Time(void)
 {
-    if ( !digitalRead(FTDI_nDTR) )  // both FTDI_nDTR and FTDI_nRTS are set (active low) when avrdude tries to use the bootloader
-    { 
-        if ( !(activate_bootloader || activate_lockout || transmitted_uart) )
+    if (bootloader_started)
+    {
+        unsigned long kRuntime = millis() - bootloader_started_at;
+        
+        if ( kRuntime > BOOTLOADER_ACTIVE)
         {
-            // send a byte to the UART output
-            uart_started_at = millis();
-            printf("%c", bootloader_address); 
-            transmitted_uart = 1;
+            host_active =1;
+            bootloader_started = 0;
         }
     }
-    else
+}
+
+void check_DTR(void)
+{
+    if (!controlled_by_remote)
     {
-        activate_bootloader =0;
-        digitalWrite(LED_BUILTIN, HIGH);
+        if ( !digitalRead(FTDI_nDTR) )  // both FTDI_nDTR and FTDI_nRTS are set (active low) when avrdude tries to use the bootloader
+        { 
+            if ( !(bootloader_started  || activate_lockout || host_active || uart_has_TTL) )
+            {
+                // send a byte on the DTR pair when FTDI_nDTR is first active
+                uart_started_at = millis();
+                uart_output= bootloader_address; // set by I2C, default is RPU_HOST_CONNECT
+                printf("%c", uart_output); 
+                uart_has_TTL = 1;
+            }
+        }
+        else
+        {
+            if ( host_active && (!uart_has_TTL) && (!bootloader_started) && (!activate_lockout) )
+            {
+                // send a byte on the DTR pair when FTDI_nDTR is first non-active
+                uart_started_at = millis();
+                uart_output= RPU_HOST_LOCKED;
+                printf("%c", uart_output); 
+                uart_has_TTL = 1;
+                digitalWrite(LED_BUILTIN, HIGH);
+            }
+        }
     }
 }
 
@@ -227,7 +269,7 @@ void check_lockout(void)
         digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
         
         // set bootloader mode to prevent check_DTR from looping into anogher lockout
-        activate_bootloader = 1;
+        host_active = 1;
     }
 }
 
@@ -240,53 +282,80 @@ void check_uart(void)
         char input;
         input = getchar();
 
-        if (input == RPU_NORMAL_MODE)
-        { // end the lockout if it was set.
+        // was this byte sent with the local DTR pair driver, if so the error status may need update
+        // and the lockout from a local host needs to be treated differently
+        // need to ignore the local host's DTR if getting control from a remote host
+        if ( uart_has_TTL )
+        {
+            if(input != uart_output) 
+            { // sent byte does not match,  but I'm not to sure what would cause this.
+                error_status &= (1<<2); // bit two set 
+            }
+            uart_has_TTL = 0;
+            controlled_by_remote = 0;
+        }
+        else
+        {
+            controlled_by_remote = 1;
+        }
+
+        if (input == RPU_NORMAL_MODE) // end the lockout if it was set.
+        {
             activate_lockout =0;
-            activate_bootloader =0;
+            host_active =1;
             digitalWrite(LED_BUILTIN, HIGH);
             digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
             digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
             digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
             digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
         }
+        else if (input == RPU_HOST_LOCKED) // the host is disconnected 
+        { 
+            controlled_by_remote = 0;
+            activate_lockout =0;
+            host_active =0;
+            digitalWrite(LED_BUILTIN, HIGH);
+            digitalWrite(RX_DE, LOW); // disallow RX pair driver to enable if FTDI_TX is low
+            digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
+            digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
+            digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior that outputs to FTDI_RX input
+        }
         else
         {
-            if (input == RPU_ADDRESS) // that is my local address, so I should reset my MCU and keep RX/TX open
+            if (input == RPU_ADDRESS) // that is my local address
             {
-                activate_bootloader =1;
+                // connect the host and local mcu
+                digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
+                digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
+                digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
+                digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
+
+                // start the bootloader
+                bootloader_started = 1;
                 digitalWrite(nSS, LOW);   // nSS goes through a open collector buffer to nRESET
                 _delay_ms(20);  // hold reset low for a short time 
                 digitalWrite(nSS, HIGH); // this will release the buffer with open colllector on MCU nRESET.
+                blink_started_at = millis();
+                bootloader_started_at = millis();
             }
             else
             {  // lockout MCU, but do not block the ftdi host
                 activate_lockout =1;
-                digitalWrite(RX_DE, LOW); // allow RX pair driver to enable if FTDI_TX is low
-                digitalWrite(RX_nRE, HIGH);  // disable RX pair recevior to output to local MCU's RX input
+                digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
+                digitalWrite(RX_nRE, HIGH);  // disable RX pair recevior to block output to local MCU's RX input
                 digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
                 digitalWrite(TX_nRE, HIGH);  // enable TX pair recevior to output to FTDI_RX input
                 lockout_started_at = millis();
                 blink_started_at = millis();
             }
         }
-
-        if ( transmitted_uart )
-        {
-            if(input != bootloader_address) 
-            { // sent byte does not match,  but I'm not to sure what would cause this.
-                error_status &= (1<<2); // bit two set 
-            }
-            transmitted_uart = 0;
-         }
     }
-    else if (transmitted_uart && (kRuntime > VERIFY_UART_DELAY) )
+    else if (uart_has_TTL && (kRuntime > UART_TTL) )
     { // perhaps the DTR line is stuck (e.g. someone has pulled it low) so we time out
         error_status &= (1<<0); // bit zero set 
-        transmitted_uart = 0;
+        uart_has_TTL = 0;
     }
 }
-
 
 int main(void)
 {
@@ -297,6 +366,7 @@ int main(void)
     while (1) 
     {
         blink_on_activate();
+        check_Bootload_Time();
         check_DTR();
         check_lockout();
         check_uart();

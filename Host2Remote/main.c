@@ -59,6 +59,7 @@ static uint8_t bootloader_address;
 static uint8_t lockout_active;
 static uint8_t uart_has_TTL;
 static uint8_t host_is_foreign;
+static uint8_t local_mcu_is_rpu_aware;
 
 volatile uint8_t error_status;
 volatile uint8_t uart_output;
@@ -81,9 +82,25 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
     txBufferLength = numBytes;
     if (txBufferLength > 1)
     {
-        if ( (txBuffer[0] == 0) ) // TWI command to read RPU_ADDRESS
+        if ( (txBuffer[0] == 0) ) // TWI command to read RPU_ADDRESS and activate normal mode on RPU bus
         {
             txBuffer[1] = RPU_ADDRESS; // '0' is 0x30
+            local_mcu_is_rpu_aware =1;
+            
+            // send a byte on the DTR pair to activate all devices
+            uart_started_at = millis();
+            uart_output = RPU_NORMAL_MODE;
+            printf("%c", uart_output); 
+            
+            // preserve host_is_foreign 
+            if (host_is_foreign) 
+            {
+                uart_has_TTL = 0;
+            }
+            else
+            {
+                uart_has_TTL = 1;
+            }
         }
         if ( (txBuffer[0] == 2) ) // read byte sent on DTR pair when FTDI_nDTR toggles
         {
@@ -95,13 +112,20 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
         }
         if ( (txBuffer[0] == 5) ) // send RPU_NORMAL_MODE on DTR pair
         {
-            if ( !(uart_has_TTL) )
+            // send a byte to the UART output
+            uart_started_at = millis();
+            uart_output = RPU_NORMAL_MODE;
+            printf("%c", uart_output); 
+            local_mcu_is_rpu_aware =1;
+            
+            // preserve host_is_foreign 
+            if (host_is_foreign) 
             {
-                // send a byte to the UART output
-                uart_started_at = millis();
-                uart_output = RPU_NORMAL_MODE;
-                printf("%c", uart_output); 
-                uart_has_TTL = 0; 
+                uart_has_TTL = 0;
+            }
+            else
+            {
+                uart_has_TTL = 1;
             }
         }
         if ( (txBuffer[0] == 6) ) // TWI command to read error status
@@ -124,6 +148,75 @@ void slaveTransmit(void)
         error_status &= (1<<1); // bit one set 
 }
 
+void connect_normal_mode(void)
+{
+    // connect both the local mcu and host/ftdi uart
+    if(!host_is_foreign)
+    {
+        digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
+        digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
+        digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
+        digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
+    }
+
+    // connect the local mcu if it has talked to the rpu manager (e.g. got an address)
+    else
+    {
+        digitalWrite(RX_DE, LOW); // disallow RX pair driver to enable if FTDI_TX is low
+        digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
+        if(local_mcu_is_rpu_aware)
+        {
+            digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
+        }
+        else
+        {
+            digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
+        }
+        digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior to output to FTDI_RX input
+    }
+}
+
+void connect_bootload_mode(void)
+{
+    // connect the remote host and local mcu
+    if (host_is_foreign)
+    {
+        digitalWrite(RX_DE, LOW); // disallow RX pair driver to enable if FTDI_TX is low
+        digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
+        digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
+        digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior to output to FTDI_RX input
+    }
+    
+    // connect the local host and local mcu
+    else
+    {
+        digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
+        digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
+        digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
+        digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
+    }
+}
+
+void connect_lockout_mode(void)
+{
+    // lockout everything
+    if (host_is_foreign)
+    {
+        digitalWrite(RX_DE, LOW); // disallow RX pair driver to enable if FTDI_TX is low
+        digitalWrite(RX_nRE, HIGH);  // disable RX pair recevior to output to local MCU's RX input
+        digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
+        digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior to output to FTDI_RX input
+    }
+    
+    // lockout MCU, but not host
+    else
+    {
+        digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
+        digitalWrite(RX_nRE, HIGH);  // disable RX pair recevior to output to local MCU's RX input
+        digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
+        digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
+    }
+}
 
 void setup(void) 
 {
@@ -229,6 +322,7 @@ void check_Bootload_Time(void)
         
         if ( kRuntime > BOOTLOADER_ACTIVE)
         {
+            connect_normal_mode();
             host_active =1;
             bootloader_started = 0;
         }
@@ -274,28 +368,7 @@ void check_lockout(void)
     
     if ( lockout_active && (kRuntime > LOCKOUT_DELAY))
     {
-        // when host that caused lockout is local then brodcast the end of lockout
-        // a remote mcu can also brodcast when its application starts up and does so 
-        // through I2C.
-        if(!host_is_foreign)
-        {
-            // send a byte to the UART output
-            uart_started_at = millis();
-            uart_output = RPU_NORMAL_MODE;
-            printf("%c", uart_output); 
-            uart_has_TTL = 1;
-        }
-        
-        // unobtrusively remove lock when control is foreign (I don't think this should run on Host2Remote)
-        // connect the local mcu
-        else
-        {
-            digitalWrite(RX_DE, LOW); // disallow RX pair driver to enable if FTDI_TX is low
-            digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
-            digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
-            digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior to output to FTDI_RX input
-        }
-
+        connect_normal_mode();
         host_active = 1;
         lockout_active =0;
     }
@@ -327,55 +400,21 @@ void check_uart(void)
             host_is_foreign = 1;
         }
 
-        if (input == RPU_NORMAL_MODE) // end the lockout if it was set.
+        if (input == RPU_NORMAL_MODE) // end the lockout or bootloader if it was set.
         {
-            lockout_active =0;
-            bootloader_started = 0;
-            host_active =1;
-            
-            // connect the local host and local mcu (this should not run on the Host2Remote board)
-            if (host_is_foreign)
-            {
-                digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
-                digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
-                digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
-                digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
-            }
-            
-            // connect the local host and local mcu
-            else
-            {
-                digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
-                digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
-                digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
-                digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
-            }
+            lockout_started_at = millis() - LOCKOUT_DELAY;
+            bootloader_started_at = millis() - BOOTLOADER_ACTIVE;
         }
         else if (input == RPU_ADDRESS) // that is my local address
         {
-            // connect the remote host and local mcu
-            if (host_is_foreign)
-            {
-                digitalWrite(RX_DE, LOW); // disallow RX pair driver to enable if FTDI_TX is low
-                digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
-                digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
-                digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior to output to FTDI_RX input
-            }
-            
-            // connect the local host and local mcu
-            else
-            {
-                digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
-                digitalWrite(RX_nRE, LOW);  // enable RX pair recevior to output to local MCU's RX input
-                digitalWrite(TX_DE, HIGH); // allow TX pair driver to enable if TX (from MCU) is low
-                digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
-            }
+            connect_bootload_mode();
 
             // start the bootloader
             bootloader_started = 1;
             digitalWrite(nSS, LOW);   // nSS goes through a open collector buffer to nRESET
             _delay_ms(20);  // hold reset low for a short time 
             digitalWrite(nSS, HIGH); // this will release the buffer with open colllector on MCU nRESET.
+            local_mcu_is_rpu_aware = 0; // after a reset it may be loaded with new software
             blink_started_at = millis();
             bootloader_started_at = millis();
         }
@@ -385,32 +424,14 @@ void check_uart(void)
             bootloader_started = 0;
             host_active =0;
 
-            // lockout everything
-            if (host_is_foreign)
-            {
-                digitalWrite(RX_DE, LOW); // disallow RX pair driver to enable if FTDI_TX is low
-                digitalWrite(RX_nRE, HIGH);  // disable RX pair recevior to output to local MCU's RX input
-                digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
-                digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior to output to FTDI_RX input
-            }
-            
-            // lockout MCU, but not host
-            else
-            {
-                digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
-                digitalWrite(RX_nRE, HIGH);  // disable RX pair recevior to output to local MCU's RX input
-                digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
-                digitalWrite(TX_nRE, LOW);  // enable TX pair recevior to output to FTDI_RX input
-            }
+            connect_lockout_mode();
             
             lockout_started_at = millis();
             blink_started_at = millis();
         }
         else if (input > 0x7F) // RPU_HOST_DISCONNECT is the bitwise negation of an RPU_ADDRESS it will be > 0x80 (seen as a uint8_t)
         { 
-            // once host is foreign it is going to be a pain to switch to another host
-            // host_is_foreign = 0;
-
+            host_is_foreign = 0;
             lockout_active =0;
             host_active =0;
             bootloader_started = 0;

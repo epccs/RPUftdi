@@ -87,19 +87,19 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
             txBuffer[1] = RPU_ADDRESS; // '0' is 0x30
             local_mcu_is_rpu_aware =1;
             
-            // send a byte on the DTR pair to activate all devices
-            uart_started_at = millis();
-            uart_output = RPU_NORMAL_MODE;
-            printf("%c", uart_output); 
-            
-            // preserve host_is_foreign 
-            if (host_is_foreign) 
+            // this ends the local mcu lockout. If the local host is active then broadcast, 
+            if (localhost_active) 
             {
-                uart_has_TTL = 0;
+                // send a byte to the UART output
+                uart_started_at = millis();
+                uart_output = RPU_NORMAL_MODE;
+                printf("%c", uart_output); 
+                uart_has_TTL = 1; // causes host_is_foreign to be false
             }
             else
             {
-                uart_has_TTL = 1;
+                lockout_started_at = millis() - LOCKOUT_DELAY;
+                bootloader_started_at = millis() - BOOTLOADER_ACTIVE;
             }
         }
         if ( (txBuffer[0] == 2) ) // read byte sent on DTR pair when FTDI_nDTR toggles
@@ -109,24 +109,6 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
         if ( (txBuffer[0] == 3) ) // buffer the byte that is sent on DTR pair when FTDI_nDTR toggles
         {
             bootloader_address = txBuffer[1];
-        }
-        if ( (txBuffer[0] == 5) ) // send RPU_NORMAL_MODE on DTR pair
-        {
-            // send a byte to the UART output
-            uart_started_at = millis();
-            uart_output = RPU_NORMAL_MODE;
-            printf("%c", uart_output); 
-            local_mcu_is_rpu_aware =1;
-            
-            // preserve host_is_foreign 
-            if (host_is_foreign) 
-            {
-                uart_has_TTL = 0;
-            }
-            else
-            {
-                uart_has_TTL = 1;
-            }
         }
         if ( (txBuffer[0] == 6) ) // TWI command to read error status
         {
@@ -269,7 +251,6 @@ void setup(void)
     uart_output= RPU_HOST_DISCONNECT;
     printf("%c", uart_output); 
     uart_has_TTL = 0; // act like a foreign host (this is going to cause problems)
-    digitalWrite(LED_BUILTIN, HIGH);
 }
 
 // blink if the host is active, fast blink if error status, slow blink in lockout
@@ -279,6 +260,12 @@ void blink_on_activate(void)
     
     if (!error_status) 
     {
+        // blink half as fast when host is foreign
+        if (host_is_foreign)
+        {
+            kRuntime = kRuntime >> 1;
+        }
+        
         if ( bootloader_started  && (kRuntime > BLINK_BOOTLD_DELAY) )
         {
             digitalToggle(LED_BUILTIN);
@@ -404,6 +391,8 @@ void check_uart(void)
         {
             lockout_started_at = millis() - LOCKOUT_DELAY;
             bootloader_started_at = millis() - BOOTLOADER_ACTIVE;
+            digitalWrite(LED_BUILTIN, HIGH);
+            blink_started_at = millis();
         }
         else if (input == RPU_ADDRESS) // that is my local address
         {

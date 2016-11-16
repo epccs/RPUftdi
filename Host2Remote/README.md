@@ -12,7 +12,7 @@ FTDI_nDTR signal will cause a byte to be sent on the DTR pair to reset a MCU boa
 
 For how I setup my Makefile toolchain <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>.
 
-With a ISP tool connection (set the ISP_PORT in Makefile) run 'make isp' and it should compile and then flash the MCU.
+With an ISP tool connected to the bus manager (set the ISP_PORT in Makefile) run 'make isp' and it should compile and then flash the bus manager.
 
 ``` 
 rsutherland@conversion:~/Samba/RPUftdi/Host2Remote$ make isp
@@ -141,6 +141,16 @@ avrdude done.  Thank you.
 This firmware is at Address '0' on the RPU_BUS, (not zero but the ASCII value for the character).
 
 When DTR toggles an address byte is sent out over the DTR pair. If the address sent is '0' the local MCU will enter bootloader mode, and remain connected to the RPU_BUS, all other address will be locked out. After a period of time in lockout or when a normal mode byte is seen on the DTR pair, the local MCU is (re)connected to the bus. Only the node with an active host (e.g. not host_is_foreign) can broadcast the normal mode byte on the DTR pair, it will broadcast when the node reads the RPU_ADDRESS from the bus manger over I2C.
+
+
+## Bus Manager Modes
+
+In Normal Mode, the RPU bus manager connects the local MCU node to the RPU bus if it is RPU aware (e.g. ask for RPU address over I2C). Otherwise, it will not connect the local MCU's TX to the bus but does connect RX. The host will be connected unless it is foreign.
+
+In bootload mode, the RPU bus manager connects the local MCU node to the RPU bus. Also, the host will be connected unless it is foreign. It is expected that all other nodes are in lockout mode. Note the BOOTLOADER_ACTIVE delay is less than the LOCKOUT_DELAY, but it needs to be in bootload mode long enough to allow finishing. A slow bootloader will require longer delays.
+
+In lockout mode, if the host is foreign both the local MCU node and Host are disconnected from the bus, otherwise, the host remains connected.
+
 
 ## I2C/TWI Slave
 

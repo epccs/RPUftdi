@@ -1,6 +1,6 @@
 # Host2Remote
 
-This bus manager firmware is for an RPUftdi board, it will send a byte (address) over DTR pair to reset a MCU board (e.g. an Irrigate7 with an RPUadpt shield) when the FTDI_nDTR toggles. The application firmware once loaded and running on MCU board can then enable normal mode when it starts or wait for the lockout to timeout. 
+This bus manager firmware is for an RPUftdi board, it will send a byte (address) over DTR pair to reset a MCU board when the FTDI_nDTR toggles. The application firmware once loaded and running on MCU board can then enable normal mode when it starts or wait for the lockout to timeout. 
 
 ## Overview
 
@@ -44,8 +44,8 @@ The I2C address is 0x29 (dec 41). It is organized as an array of read or write c
 1. set the shields RPU_BUS address and write it (and an id) to eeprom
 2. read the address sent when DTR/RTS toggles 
 3. write the address that will be sent when DTR/RTS toggles
-4. reads TBD (not implemented)
-5. write TBD (not implemented)
+4. read RPUpi shutdown (the ICP1 pin has a weak pull up and a momentary switch)
+5. set RPUpi shutdown (pull down ICP1 for SHUTDOWN_TIME in millis to cause host to hault)
 6. reads error status bits[0:DTR readback timeout, 1:twi transmit fail, 2:DTR readback not match]
 7. wrties (or clears) error status 
 
@@ -60,7 +60,7 @@ picocom -b 115200 /dev/ttyUSB0
 
 ## Scan with i2c-debug
 
-Scan for the I2C slave address of the RPUftdi shield.
+Scan for the I2C slave address of the RPUftdi shield and address I2C.
 
 ``` 
 /0/id?
@@ -137,6 +137,40 @@ The example programs read the address durring setup, so they will need a reset.
 /2/id?
 {"id":{"name":"I2Cdebug","desc":"RPUno Board /w atmega328p and LT3652","avr-gcc":"4.9"}}
 ``` 
+
+
+## Set RPUpi Shutdown
+
+Using an RPUno and an RPUftdi shield, connect another RPUno with i2c-debug firmware to the RPUpi shield at address '1'. To hault the host send the I2C shutdown command. 
+
+``` 
+/1/address 41
+{"address":"0x29"}
+/1/buffer 5,1
+{"txBuffer":[{"data":"0x5"},{"data":"0x1"}]}
+/1/read? 2
+{"rxBuffer":[{"data":"0x5"},{"data":"0x1"}]}
+``` 
+
+
+## Read RPUpi Shutdown Detected
+
+Using an RPUno and an RPUftdi shield, connect another RPUno with i2c-debug firmware to the RPUpi shield at address '1'. And check if the button has been pushed to hault the host.
+
+``` 
+/1/address 41
+{"address":"0x29"}
+/1/buffer 4,255
+{"txBuffer":[{"data":"0x4"},{"data":"0xFF"}]}
+/1/read? 2
+{"rxBuffer":[{"data":"0x4"},{"data":"0x1"}]}
+/1/buffer 4,255
+{"txBuffer":[{"data":"0x4"},{"data":"0xFF"}]}
+/1/read? 2
+{"rxBuffer":[{"data":"0x4"},{"data":"0x0"}]}
+``` 
+
+Second value in rxBuffer has shutdown_detected value (0 or 1). It is cleared when reading.
 
 
 ## Notes

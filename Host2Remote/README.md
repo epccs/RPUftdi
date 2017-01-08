@@ -1,6 +1,6 @@
 # Host2Remote
 
-This bus manager firmware is for an RPUftdi board, it will send a byte (address) over DTR pair to reset a MCU board when the FTDI_nDTR toggles. The application firmware once loaded and running on MCU board can then enable normal mode when it starts or wait for the lockout to timeout. 
+This bus manager firmware is for an RPUftdi board, it will send a byte (address) over DTR pair to reset a MCU board when the FTDI_nDTR toggles. The application firmware once loaded and running on MCU board can then enable normal mode when it starts or wait for the lockout to timeout.
 
 ## Overview
 
@@ -141,7 +141,7 @@ The example programs read the address durring setup, so they will need a reset.
 
 ## Set RPUpi Shutdown
 
-Using an RPUno and an RPUftdi shield, connect another RPUno with i2c-debug firmware to the RPUpi shield at address '1'. To hault the host send the I2C shutdown command. 
+To hault the host send the I2C shutdown command 5 (first byte), with data 1 (second byte) which sets shutdown_started, clears shutdown_detected and pulls down the SHUTDOWN (ICP1) pin. The shutdown_started flag is also used to stop blinking of the LED_BUILTIN to reduce power usage noise so that the host power usage can be clearly seen.
 
 ``` 
 /1/address 41
@@ -152,10 +152,12 @@ Using an RPUno and an RPUftdi shield, connect another RPUno with i2c-debug firmw
 {"rxBuffer":[{"data":"0x5"},{"data":"0x1"}]}
 ``` 
 
+Above used an RPUftdi shield, connected to an RPUpi shield at address '1'. The shields were each mounted on an RPUno loaded with i2c-debug firmware.
+
 
 ## Read RPUpi Shutdown Detected
 
-Using an RPUno and an RPUftdi shield, connect another RPUno with i2c-debug firmware to the RPUpi shield at address '1'. And check if the button has been pushed to hault the host.
+To check if host got a hault command or if the shutdown button got pressed send the I2C shutdown command 4 (first byte), with place holder data (second byte). This clears shutdown_detected flag that was used to keep the LED_BUILTIN from blinking.
 
 ``` 
 /1/address 41
@@ -169,6 +171,8 @@ Using an RPUno and an RPUftdi shield, connect another RPUno with i2c-debug firmw
 /1/read? 2
 {"rxBuffer":[{"data":"0x4"},{"data":"0x0"}]}
 ``` 
+
+Above used an RPUftdi shield, connected to an RPUpi shield at address '1'. The shields were each mounted on an RPUno loaded with i2c-debug firmware.
 
 Second value in rxBuffer has shutdown_detected value (0 or 1). It is cleared when reading.
 

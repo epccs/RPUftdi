@@ -23,7 +23,7 @@ This is a list of Test preformed on each RPUftdi after assembly.
 
 ## Basics
 
-These tests are for an assembled RPUno board 14145^3 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
+These tests are for an assembled RPUftdi board 14145^3 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
 
 **Warning: never use a soldering iron to rework ceramic capacitors due to the thermal shock.**
     

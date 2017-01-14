@@ -1,6 +1,6 @@
 # Description
 
-This shows the setup and method used for evaluation of RPUno.
+This shows the setup and method used for evaluation of RPUftdi.
 
 # Table of References
 

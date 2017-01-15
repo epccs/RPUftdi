@@ -39,17 +39,18 @@ Eagle Files, BOM, Status, and how to Test.
 ![Status](./status_icon.png "RPUno Status")
 
 ```
-        ^4  Done:  
-            WIP: Design, 
-            Todo: Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^4  Done: Design, Layout, BOM, 
+            WIP: Review*,
+            Todo: Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             Connect bus manager ICP1 pin to a test point rather than RXD from DTR transceiver. 
+            Remove Vin connection and use +5V only.
 
         ^3 Done: Design, Layout, Review*, Order Boards, Assembly, Testing, 
-            WIP:  Evaluation
-            Todo:   
-            *during review the Design may change without changing the revision.
-            Notes: added pads for a crystal, fix a ISP bricking problem, remove capacitor reset, use open drain reset.
+           WIP: Evaluation
+           Todo:
+           location: 2016-10-1 Test Bench /w an OSEPP Uno R3, used to connect by CAT5 to outside parts and to bench parts as needed.
+                     2017-1-5 ICP1 hacked open.
 ```
 
 Debugging and fixing problems i.e. [Schooling](./Schooling/)
@@ -110,17 +111,17 @@ As a shield RPUadpt plugs into an RPUno, Irrigate7 or PulseDAQ.
 
 ![RPUftdi Mounting](./Evaluation/14226^3_OnIrrigate7.jpg "RPUftdi Mounting")
 
-The shield has a bus manager MCU that is used the RS-422 transceivers. I program it with an ISP tool using avrdude. The [Toolchain] is found on Ubuntu and Raspbian. For the ISP tool, I use an SPI level converter and load an Uno board with the ArduinoISP sketch from Arduino.cc IDE (1.6.7+) example sketches. Firmware examples (most used for testing) are found in other folders of this repository, the one I primarily use is [Host2Remote]. 
+The shield has a bus manager MCU that is used to control the RS-422 transceivers. I program it with an ISP tool using avrdude. The [Toolchain] is found on Ubuntu and Raspbian. For the ISP tool, I use an SPI level converter since the bus manager is at 3.3V and load an Uno board with the ArduinoISP sketch from Arduino.cc IDE (1.6.7+) example sketches. Firmware examples (most used for testing) are found in other folders of this repository, but the one I primarily use is [Host2Remote].
 
 [Toolchain]: https://github.com/epccs/RPUftdi#avr-toolchain
 [Host2Remote]: https://github.com/epccs/RPUftdi/tree/master/Host2Remote
 
-__Warning:__ the RPUftdi bus manager is powered with 3.3V so make sure a 5V powered ISP tool has a level converter.
+__Warning:__ the RPUftdi bus manager is powered with 3.3V so a 5V  ICSP tool needs to have a level converter.
 
-Note: Obtaining a rugged ISP tool is a problem, I would like to suggest an AVRISP mkII but Atmel no longer makes them. I have an AVR Dragon and it is working with avrdude on Ubuntu and Raspbian but it is not very rugged so I normaly use the Arduino ISP sketch and a level shifter for the MOSI, MISO, and SCK pins.
+Note: Obtaining a rugged ISP tool is a dilemma, I would like to suggest an AVRISP mkII but Atmel no longer makes them. I have an AVR Dragon and it is working with avrdude on Ubuntu and Raspbian but it is not very rugged so I normally use the Arduino ISP sketch and a level shifter for the MOSI, MISO, and SCK pins.
 
 The CAT5 needs wired just like an Ethernet cable following [T568A] (or T568B) method. 
 
 [T568A]: http://en.wikipedia.org/wiki/Category_5_cable
 
-Grounding should occur at one location only. The host frame will connect the USB to ground which is also ran through the CAT5. Unfortunately, the ground wires within CAT5 will not survive a lightning strike and will bring it to the host. To reduce the risk  run a #14 AWG ground wire between the remote device(s) and the ground system connected to the host chassis. Tie the 0V of each remote device to the ground with a 100k resistor. Also, the host chassis needs a good (#14 AWG or larger) wire to the ground system. 
+Grounding should occur at one location only. The host frame will connect the USB to ground which also runs through the CAT5. Unfortunately, the ground wires within CAT5 will not survive a lightning strike and will bring it to the host. To reduce the risk, run a #14 AWG ground wire between the remote device(s) and the ground system connected to the host chassis. Tie the 0V of each remote device to the ground with a 100k resistor. Also, the host chassis needs a good (#14 AWG or larger) wire to the ground system.

@@ -1,13 +1,25 @@
 # Description
 
-Some lessons I learned doing RPUadpt.
+Some lessons I learned doing RPUftdi.
 
 # Table Of Contents:
 
-4. [^3 Bus Manager ICP1 Used to Hault Host](#3-bus-nanager-icp1-used-to-hault-host)
-3. [^3 FT231X Problem Toggling nDTR and nRTS](#3-ft231x-problem-toggling-ndtr and-nrts)
+5. [^3 Baud Rate](#3-baud-rate)
+4. [^3 Bus Manager ICP1 Used to Hault Host](#3-bus-manager-icp1-used-to-hault-host)
+3. [^3 FT231X Problem Toggling nDTR and nRTS](#3-ft231x-problem-toggling-ndtr-and-nrts)
 2. [^2 I2C Level Converter](#2-i2c-level-converter)
 1. [^2 Brick Bus Management MCU](#2-brick-bus-management-mcu)
+
+
+## ^3 Baud Rate 
+
+The [Bit Rate] error at 115.2k is too high (though it mostly works). I have not seen errors on Windows yet but am seeing them on Linux. Looking at the [Rate Calculator] I see 76.8k is very good, but the picocom packaged on Ubuntu does not support it. The next very good rate is 38.4k which picocom does support. The bootloader does a CRC check with each line in the hex file so running it 115.2k is fine, it will redo the chunks with errors. However, I don't want to see any errors while running commands (that would look bad during a demo).
+
+Note: [Baud] is the wrong term, but is the one everyone knows.
+
+[Rate Calculator]: http://wormfood.net/avrbaudcalc.php
+[Baud]: https://en.wikipedia.org/wiki/Baud
+[Bit Rate]: https://en.wikipedia.org/wiki/Bit_rate#Gross_bit_rate
 
 
 ## ^3 Bus Manager ICP1 Used to Hault Host

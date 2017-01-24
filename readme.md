@@ -4,7 +4,7 @@ From <https://github.com/epccs/RPUftdi>
 
 ## Overview
 
-Shield used to connect a microcontroler and a USB host to a full duplex RS-422 (RX and TX pairs) and an out of band half duplex RS-485 (DTR pair) over CAT5. Its a multidrop bus between a host (e.g. Pi Zero on [RPUpi] or no host with [RPUadpt]) and an MCU board (e.g. [RPUno]).
+Shield used to connect a microcontroller and a USB host to a full duplex RS-422 (RX and TX pairs) and an out of band half duplex RS-485 (DTR pair) over CAT5. It's a multidrop bus between a host (e.g. Pi Zero on [RPUpi] or no host with [RPUadpt]) and an MCU board (e.g. [RPUno]).
 
 [HackADay](https://hackaday.io/project/15585-rpuftid)
 
@@ -45,4 +45,4 @@ A Host computer (e.g. Pi Zero on [RPUpi] or desktop with RPUftdi) issues command
 [binutils-avr]: http://packages.ubuntu.com/search?keywords=binutils-avr
 [gdb-avr]: http://packages.ubuntu.com/search?keywords=gdb-avr
 [avr-libc]: http://packages.ubuntu.com/search?keywords=avr-libc
-[avrdude]: http://packages.ubuntu.com/search?keywords=avrdude[avrdude](http://packages.ubuntu.com/search?keywords=avrdude)
+[avrdude]: http://packages.ubuntu.com/search?keywords=avrdude

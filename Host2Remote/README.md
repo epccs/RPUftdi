@@ -54,7 +54,7 @@ Connect to i2c-debug on an RPUno with picocom (or ilk).
 
 ``` 
 #exit picocom with C-a, C-x
-picocom -b 115200 /dev/ttyUSB0
+picocom -b 38400 /dev/ttyUSB0
 ``` 
 
 
@@ -102,7 +102,7 @@ exit picocom with C-a, C-x.
 Connect with picocom again. 
 
 ``` 
-picocom -b 115200 /dev/ttyUSB0
+picocom -b 38400 /dev/ttyUSB0
 ``` 
 
 This will toggle DTR on the RPUftdi shield which should send 0x31 on the DTR pair. The RPUftdi shield should blink slow to indicate lockout, while the shield with address '1' blinks fast to indicate bootloader mode. The lockout should timeout after LOCKOUT_DELAY that can be adjusted in firmware.

@@ -96,7 +96,7 @@ BUS manager MCU Voltage: 3.3V (e.g. IOREF is 5V)
 
 ## Testing
 
-Check correct assembly and function with [Testing] [./Testing/]
+Check correct assembly and function with [Testing](./Testing/)
 
 
 
@@ -120,7 +120,7 @@ __Warning:__ the RPUftdi bus manager is powered with 3.3V so a 5V  ICSP tool nee
 
 Note: Obtaining a rugged ISP tool is a dilemma, I would like to suggest an AVRISP mkII but Atmel no longer makes them. I have an AVR Dragon and it is working with avrdude on Ubuntu and Raspbian but it is not very rugged so I normally use the Arduino ISP sketch and a level shifter for the MOSI, MISO, and SCK pins.
 
-The CAT5 needs wired just like an Ethernet cable following [T568A] (or T568B) method. 
+The CAT5 needs wired just like an Ethernet cable following [T568A] or T568B method. 
 
 [T568A]: http://en.wikipedia.org/wiki/Category_5_cable
 

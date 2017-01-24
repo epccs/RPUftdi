@@ -28,7 +28,7 @@ Hardware files are in Eagle, there is also some testing, evaluation, and schooli
 
 ## Example
 
-A Host computer (e.g. Pi Zero on [RPUpi] or desktop with RPUftdi) issues commands to the RPU_BUS microcontrollers over a serial (UART) interface. The microcontrollers run a command processor that accepts interactive textual commands that operate the microcontroller peripherals as a bare metal system. This means the microcontroller can perform event capture task for a flow meter or control an array of half-bridge power outputs to run a BLDC water pump. 
+A host computer controls the microcontrollers through the FTDI serial (UART) interface. The microcontrollers run a command processor which accepts interactive textual commands and operates the peripherals as a bare metal system. The microcontroller firmware can be compiled from source that is version managed on GitHub, and then uploaded to the targets bootloader with avrdude. The host can be desktop development machine or remotely accessed (e.g. SSH).
 
 ![MultiDrop](./Hardware/Documents/MultiDrop.png "MultiDrop")
 

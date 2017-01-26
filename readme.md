@@ -28,10 +28,21 @@ Hardware files are in Eagle, there is also some testing, evaluation, and schooli
 
 ## Example
 
-A host computer controls the microcontrollers through the FTDI serial (UART) interface. The microcontrollers run a command processor which accepts interactive textual commands and operates the peripherals as a bare metal system. The microcontroller firmware can be compiled from source that is version managed on GitHub, and then uploaded to the targets bootloader with avrdude. The host can be desktop development machine or remotely accessed (e.g. SSH).
+A multi-drop serial bus allows multiple microcontroller boards to be connected to a host serial port. The host computer needs to be near the RPUftdi board because USB works over short distances (about 2 meters). The host controls the transceivers through the FTDI UART bridge automatically, which means no software [magic] is needed to control the transceivers. The microcontrollers do the same, but only one should be allowed to talk.
+
+[magic]: https://github.com/pyserial/pyserial/blob/master/serial/rs485.py
 
 ![MultiDrop](./Hardware/Documents/MultiDrop.png "MultiDrop")
 
+In the examples, I have for [RPUno] a command processor accepts interactive textual commands and operates the peripherals. The examples have a simple makefile that compiles the microcontroller firmware from the source. The host I use has Ubuntu (or Raspbian) with the AVR toolchain installed.
+
+The makefile has a rule (e.g. "make bootload") that uploads to the targets bootloader with avrdude. Yes that is correct... the no [magic] also means avrdude can work (though the bus manager needs to setup a point to point mode). 
+
+When PySerial on the host opens the serial port it pulls the nDTR line low (it is active low) and that tells the manager running [Host2Remote] firmware to reset the bootload address. PySerial needs to wait for a few seconds so the bootloader timeout finishes just like with an Arduino Uno, and is the same reason (e.g. on RS232 the same bootloader timeout is needed).
+
+[Host2Remote]: ./Host2Remote
+
+When avrdude opens the serial port it pulls the nDTR line low and the manager broadcast the bootload address which places everything in lockout except the host and the microcontroller board that was addressed. The address is held in the manager on the shield so replacing the [RPUno] dos not change that locations address, but replacing the [RPUadpt] does.
 
 ## AVR toolchain
 

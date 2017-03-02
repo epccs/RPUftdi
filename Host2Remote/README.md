@@ -192,6 +192,6 @@ sudo modprobe ftdi_sio
 # the physcal UART chip will still have DTR/RTS active
 # but picocom can open and release it now to clear the
 # active lines.
-picocom -b 115200 /dev/ttyUSB0
+picocom -b 38400 /dev/ttyUSB0
 # C-a, C-x.
 ``` 

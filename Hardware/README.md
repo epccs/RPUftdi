@@ -39,9 +39,9 @@ Eagle Files, BOM, Status, and how to Test.
 ![Status](./status_icon.png "RPUno Status")
 
 ```
-        ^4  Done: Design, Layout, BOM, 
-            WIP: Review*,
-            Todo: Order Boards, Assembly, Testing, Evaluation.
+        ^4  Done: Design, Layout, BOM, Review*, Order Boards, Assembly,
+            WIP: Testing,
+            Todo:  Evaluation.
             *during review the Design may change without changing the revision.
             Connect bus manager ICP1 pin to a test point rather than RXD from DTR transceiver. 
             Remove Vin connection and use +5V only.

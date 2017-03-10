@@ -23,7 +23,7 @@ Eagle Files, BOM, Status, and how to Test.
 
 * Multi-drop communication.
 * Allows firmware uploads with optiboot or xboot using avrdude.
-* Open Hardware, don't like my bus manager firmware then do your own.
+* Open Hardware, with example bus manager firmware.
 
 
 # Table Of Contents
@@ -36,20 +36,17 @@ Eagle Files, BOM, Status, and how to Test.
 
 # Status
 
-![Status](./status_icon.png "RPUno Status")
+![Status](./status_icon.png "RPUftdi Status")
 
 ```
-        ^4  Done: Design, Layout, BOM, Review*, Order Boards, Assembly,
-            WIP: Testing,
-            Todo:  Evaluation.
+        ^4  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing,
+            WIP: Evaluation.
+            Todo:  
             *during review the Design may change without changing the revision.
             Connect bus manager ICP1 pin to a test point rather than RXD from DTR transceiver. 
             Remove Vin connection and use +5V only.
 
-        ^3 Done: Design, Layout, Review*, Order Boards, Assembly, Testing, 
-           WIP: Evaluation
-           Todo:
-           location: 2016-10-1 Test Bench /w an OSEPP Uno R3, used to connect by CAT5 to outside parts and to bench parts as needed.
+        ^3 location: 2016-10-1 Test Bench /w an OSEPP Uno R3, used to connect by CAT5 to outside parts and to bench parts as needed.
                      2017-1-5 ICP1 hacked open.
 ```
 

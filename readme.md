@@ -28,7 +28,7 @@ Hardware files are in Eagle, there is also some testing, evaluation, and schooli
 
 ## Example
 
-A multi-drop serial bus allows multiple microcontroller boards to be connected to a host serial port. The host computer needs to be near the RPUftdi board because USB works over short distances (about 2 meters). The host controls the transceivers through the FTDI UART bridge automatically, which means no software [magic] is needed to control the transceivers. The microcontrollers do the same, but only one should be allowed to talk.
+A multi-drop serial bus allows multiple microcontroller boards to be connected to a host serial port. The host computer needs to be near the RPUftdi board because USB works over short distances (about 2 meters). The host serial handshake signals are connected to the bus manager microcontroller which is also connected to the transceivers. The goal is to have a multidrop connection that configures automatically when the host activates the FTDI UART bridge.  Additionally, it is desired to have zero software [magic] for control of the transceivers. The microcontrollers also do not need to control the transceivers, but only one should be allowed to talk.
 
 [magic]: https://github.com/pyserial/pyserial/blob/master/serial/rs485.py
 
@@ -36,15 +36,17 @@ A multi-drop serial bus allows multiple microcontroller boards to be connected t
 
 In the examples, I have for [RPUno] a command processor accepts interactive textual commands and operates the peripherals. The examples have a simple makefile that compiles the microcontroller firmware from the source. The host I use has Ubuntu (or Raspbian) with the AVR toolchain installed.
 
-The makefile has a rule (e.g. "make bootload") that uploads to the targets bootloader with avrdude. Yes that is correct... the no [magic] also means avrdude can work (though the bus manager needs to setup a point to point mode). 
+The makefile has a rule (e.g. "make bootload") that uploads to the targets bootloader with avrdude. Since the transceiver control [magic] is pushed into the bus manager, avrdude can work (the bus manager initializes a point to point mode with a 25 second time to live when the host becomes active). 
 
-When PySerial on the host opens the serial port it pulls the nDTR line low (it is active low) and that tells the manager running [Host2Remote] firmware to reset the bootload address. PySerial needs to wait for a few seconds so the bootloader timeout finishes just like with an Arduino Uno, and is the same reason (e.g. on RS232 the same bootloader timeout is needed).
+When PySerial on the host opens the serial port it pulls the nDTR line low (it is active low) and that tells the manager running [Host2Remote] firmware to reset the bootload address (broadcast on DTR pair). PySerial needs to wait for a few seconds so the bootloader timeout finishes. The RPUno application needs to read the RPUftid serial address over I2C so that the RPUftdi bus manager knows to connect the RPUno's serial lines to the multi-drop bus (and end the bootload mode immediately).
 
 [Host2Remote]: ./Host2Remote
 
 When avrdude opens the serial port it pulls the nDTR line low and the manager broadcast the bootload address which places everything in lockout except the host and the microcontroller board that was addressed. The address is held in the manager on the shield so replacing the [RPUno] dos not change that locations address, but replacing the [RPUadpt] does.
 
 ## AVR toolchain
+
+This is easy because it is packaged. Thanks Debain, Ubuntu, Raspibin, ...
 
 * sudo apt-get install [gcc-avr]
 * sudo apt-get install [binutils-avr]

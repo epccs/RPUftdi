@@ -1,6 +1,6 @@
 ;;;;;;RPUftdi BOM
 ;;;;;;semicolon separated values in text file, import into LibreOffice Calc;;;TOTAL
-;;;;;;1/23/17 14145^4 Preliminary;;;=SUM(J7:J100)
+;;;;;;3/26/17 14145^4 Preliminary;;;=SUM(J7:J100)
 
 
 LINE; REF; QTY; EPCCS TYP;EPCCS PN;MFG,PN; DESCRIPTION; NOTES; COST EA; LINE COST;BIN

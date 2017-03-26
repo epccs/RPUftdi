@@ -17,7 +17,7 @@ Eagle Files, BOM, Status, and how to Test.
 * Power from USB (after soft start) is is given to +5V on the MCU node board.
 * FTDI UART allows a HOST to connect to RX and TX pairs.
 * FTDI UART nDTR and nRTS connect to BUS manager.
-* I2C Interface between BUS manager and MCU node.  
+* I2C Interface between BUS manager and MCU node.
 
 ## Uses
 
@@ -39,15 +39,15 @@ Eagle Files, BOM, Status, and how to Test.
 ![Status](./status_icon.png "RPUftdi Status")
 
 ```
-        ^4  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing,
-            WIP: Evaluation.
-            Todo:  
-            *during review the Design may change without changing the revision.
-            Connect bus manager ICP1 pin to a test point rather than RXD from DTR transceiver. 
-            Remove Vin connection and use +5V only.
+        ^4 Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing,
+           WIP: Evaluation.
+           Todo:  
+           *during review the Design may change without changing the revision.
+           location: 2017-3-17 Test Bench /w an OSEPP Uno R3
 
         ^3 location: 2016-10-1 Test Bench /w an OSEPP Uno R3, used to connect by CAT5 to outside parts and to bench parts as needed.
                      2017-1-5 ICP1 hacked open.
+                     2017-3-17 scraped
 ```
 
 Debugging and fixing problems i.e. [Schooling](./Schooling/)
@@ -104,9 +104,15 @@ Import the [BOM](./Design/14145,BOM.csv) into LibreOffice Calc (or Excel) with s
 
 # How To Use
 
-As a shield RPUadpt plugs into an RPUno, Irrigate7 or PulseDAQ.
+RPUftdi is a shield that mounts on an RPUno or Irrigate7 as expected.
 
-![RPUftdi Mounting](./Evaluation/14226^3_OnIrrigate7.jpg "RPUftdi Mounting")
+![Irrigate7 Mount](./Evaluation/14145^3_OnIrrigate7.jpg "Irrigate7 Mount")
+
+Also mounts on an Uno with the extra pins dangling over (they are not used on the shield). 
+
+![Uno Mount](./Evaluation/14145^4_OnUno.jpg "Uno Mount")
+
+Typically I use the RPUftdi with an Uno clone since I don't have a solar panel next to my computer. The clone is powered from the USB connection on the RPUftdi board (do not connect the USB on the clone).
 
 The shield has a bus manager MCU that is used to control the RS-422 transceivers. I program it with an ISP tool using avrdude. The [Toolchain] is found on Ubuntu and Raspbian. For the ISP tool, I use an SPI level converter since the bus manager is at 3.3V and load an Uno board with the ArduinoISP sketch from Arduino.cc IDE (1.6.7+) example sketches. Firmware examples (most used for testing) are found in other folders of this repository, but the one I primarily use is [Host2Remote].
 

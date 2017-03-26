@@ -49,8 +49,8 @@ Connect a 5V supply with CC mode set at 30mA to the USB input. Verify that the 5
 Connect a 5V supply with CC mode set at 30mA to the +5V (J7 pin 4) and  0V (J7 pin 2). Measure that the the MIC5205 linear regulator has 3.3V (J9 pin 2). Measure the input current of a blank MCU. Turn off power.
 
 ```
-{   "I_IN_BLANKMCU_mA":[4.5,],
-    "LDO_V":[3.3,] }
+{   "I_IN_BLANKMCU_mA":[4.5,4.5,4.3,4.4,],
+    "LDO_V":[3.3,3.3,3.28,3.28,] }
 ```
 
 
@@ -78,10 +78,12 @@ make fuse
 
 Note: There is not a bootloader, it just sets fuses.
 
-Disconnect the ICSP tool and measure the input current for 8Mhz internal at 3.3V.
+Disconnect the ICSP tool and measure the input current for 12Mhz crystal at 3.3V. It takes a long time to settel.
 
 ```
-{   "I_IN_MCU_8MHZ_INTRN_mA":[6.3,]}
+{   "I_IN_MCU_12MHZ_LP-CRYSTAL_mA":[7.3,7.3,7.2,7.1,7.1,7.2,7.1,]}
+# old values for referance only
+{   "I_IN_MCU_8MHZ_INTRN_mA":[6.3,6.2,6.0,6.1]}
 ```
 
 
@@ -101,9 +103,9 @@ The program loops through the test. It blinks the red LED to show which test num
 As the firmware loops the input current can be measured, it should have two distinct levels, one when the DTR pair is driven low and one when the DTR pair is not driven. The blinking LED leaves the DMM unsettled. Measure that FTDI_3V3 has 3.3V (TP3).
 
 ```
-{   "DTR_HLF_LD_mA":[36.8,34.1,],
-    "DTR_NO_LD_mA":[13.7,11.5,],
-    "FTDI_3V3_V":[3.275,] }
+{   "DTR_HLF_LD_mA":[36.8,34.1,35.3,34.9,35.0,],
+    "DTR_NO_LD_mA":[13.7,11.5,12.1,11.9,12.0,],
+    "FTDI_3V3_V":[3.275,3.305,3.311,3.265,] }
 ```
 
 
@@ -114,8 +116,8 @@ Plug a header (or jumper) onto the +5V pin so that IOREF is jumpered to +5V. Con
 Check  that the input current is cycling between 56mA and 33mA. At 56mA the TX driver is driving the TX pair with half load and DTR driver is driving the DTR pair with a half load, while ony the TX pair is driven at 33mA. 
 
 ```
-{   "DTR_TX_HLF_LD_mA":[59.4,56.5,],
-    "TX_HLF_LD_mA":[36.5,33.8,] }
+{   "DTR_TX_HLF_LD_mA":[59.4,56.5,57.7,57.2,57.1,],
+    "TX_HLF_LD_mA":[36.5,33.8,35.0,34.2,34.1] }
 ```
 
 
@@ -127,8 +129,8 @@ Same as Differential Bias test with a plug in a RJ45 loopback connector to conne
 NOTE: the RX Driver is directly connected by FTDI_TX to the FTDI chip pin, if the FTDI_TX node were to be pulled down to test the RX driver the FTDI chip would not stop trying to pull it up and be damaged.
 
 ```
-{   "DTR_HLF_LD_TX_FL_LD_mA":[76.5,73.8,],
-    "TX_FL_LD_mA":[53.0,51.0,] }
+{   "DTR_HLF_LD_TX_FL_LD_mA":[76.5,73.8,75.1,74.5,74.2,],
+    "TX_FL_LD_mA":[53.0,51.0,52.0,51.5,51.2,] }
 ```
 
 Turn off power. 
@@ -136,7 +138,7 @@ Turn off power.
 
 ## USB Power Up
 
-Plug a header (or jumper) onto the +5V pin so that IOREF is jumpered to +5V.
+Plug a header (or jumper) onto the +5V pin so that IOREF is jumpered to +5V. Plug in a jumper from TX to RX pins, which normaly go to the MCU board.
 
 On Linux use the dmesg command to see latest device mesages then plug the USB input to a powered hub that was previously connected and use dmesg to verify that the new USB port shows up. Then use picocom to connect to it.
 
@@ -153,15 +155,15 @@ rsutherland@conversion:~/RPUftdi/CheckDTR$ dmesg
 [20662.512328] usb 1-4.3: Detected FT-X
 [20662.512686] usb 1-4.3: FTDI USB Serial Device converter now attached to ttyUSB0
 ...
-rsutherland@conversion:~/Samba/RPUftdi/CheckDTR$ picocom -b 38400 /dev/ttyUSB0
+rsutherland@conversion:~/RPUftdi/CheckDTR$ picocom -b 38400 /dev/ttyUSB0
 ```
 
-Plug in a jumper from TX to RX pins, which go to the MCU board, and verify each character echo's. Turn off power (unplug USB).
+Verify each character echo's. Turn off power (unplug USB).
 
 
 ## Load i2c-debug into an MCU board
 
-Plug the DUT into a bare metal MCU board (e.g. RPUno). Connect USB from a host computer to the RPUftdi to power the bus manager. Connect the ICSP tool (J9).
+Plug the DUT into a ATmega328p MCU board (e.g. RPUno). Connect USB from a host computer to the RPUftdi to power the bus manager. Connect the ICSP tool (J9).
 
 Use the command line to select the Host2Remote source working directory. Run the makefile rule used to load Host2Remote firmware.
 
@@ -172,12 +174,18 @@ make isp
 
 Use picocom to connect, and verify that the red MNG_LED blinks. The DUT's red MNG_LED blinks when the UART pulls DTR active. Exit picocom with C-a, C-x. The MNG_LED should stop blinking after picocom exits.
 
-Now load the i2c-debug firmware onto the RPUno board through the DUT. Watch the yellow USBRX and red USBTX to verify they are working. Remove power by pulling the USB plug. 
+```
+picocom -b 38400 /dev/ttyUSB0
+```
+
+Now load the i2c-debug firmware onto the RPUno board through the DUT. Watch the yellow USBRX and red USBTX to verify they are working. 
 
 ```
 cd ~RPUno/i2c-debug
 make bootload
 ```
+
+Remove power by pulling the USB plug. 
 
 Note: The serial bootload has to travel out the FTDI_TX line and into the RX transceiver driver (which also enables it). The RX differential pair is thus driven and seen by all the differential receivers on the RX pair. The RX pair receiver drives the bare metal RX line when it is enabled by the bus manager. The direction data flows is changed but it works similarly from the bare metal TX line to the FTDI_RX line.
 

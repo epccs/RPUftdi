@@ -7,9 +7,30 @@ This shows the setup and method used for evaluation of RPUftdi.
 
 # Table Of Contents:
 
+4. [^4 Bus Manager Running at 12MHz](#4-bus manager-running-at-12MHz)
 3. [^3 Proof of Concept](#3-proof-of-concept)
 2. [^2 I2C Slave Operation](#2-i2c-slave-operation)
 1. [^2 RS485 Full Duplex Loopback](#2-rs485-full-duplex-loopback)
+
+
+## ^4 Mounting
+
+Mounts on an RPUno or Irrigate7 as expected.
+
+![Irrigate7 Mount](./14145^3_OnIrrigate7.jpg "Irrigate7 Mount")
+
+Mounts on an Uno with the extra pins dangling over (they are not used on the shield). 
+
+![Uno Mount](./14145^4_OnUno.jpg "Uno Mount")
+
+Typically I use the RPUftdi with an Uno clone since I don't have a solar panel next to my computer. The clone is powered from the USB connection on the RPUftdi board (do not connect the USB on the clone).
+
+
+## ^4 Bus Manager Running at 12MHz
+
+Placed a 12MHz crystal on the revision 4 boards. The [Rate Calculator] shows zero framing error at 125k or 250k bits per second. Both non-standard rates that do not work with picocom 1.7. Since picocom does not handle half duplex control it really does not mater,  so I'm going to try 250k.
+
+[Rate Calculator]: http://wormfood.net/avrbaudcalc.php
 
 
 ## ^3 Proof of Concept

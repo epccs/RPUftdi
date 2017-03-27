@@ -6,11 +6,13 @@ From <https://github.com/epccs/RPUftdi>
 
 Shield used to connect a microcontroller and a USB host to a full duplex RS-422 (RX and TX pairs) and an out of band half duplex RS-485 (DTR pair) over CAT5. It's a multidrop bus between a host (e.g. Pi Zero on [RPUpi] or no host with [RPUadpt]) and an MCU board (e.g. [RPUno]).
 
-[HackADay](https://hackaday.io/project/15585-rpuftid)
+[Store](https://www.tindie.com/products/ron-sutherland/rpuftdi/)
 
 [Forum](http://rpubus.org/bb/viewforum.php?f=5)
 
-[OSHpark](https://oshpark.com/shared_projects/7gJOSPpM)
+[HackADay](https://hackaday.io/project/15585-rpuftid)
+
+[OSHpark](https://oshpark.com/shared_projects/CNUW0hcr)
 
 [RPUno]: https://github.com/epccs/RPUno
 [RPUpi]: https://github.com/epccs/RPUpi

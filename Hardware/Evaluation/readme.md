@@ -7,11 +7,23 @@ This shows the setup and method used for evaluation of RPUftdi.
 
 # Table Of Contents:
 
-4. [^4 Bus Manager Running at 12MHz](#4-bus manager-running-at-12MHz)
+6. [^4 Remote Reset of an RPUno](#4-remote-reset-of-an-rpuno)
+5. [^4 Mounting](#4-mounting)
+4. [^4 Bus Manager Running at 12MHz](#4-bus-manager-running-at-12mhz)
 3. [^3 Proof of Concept](#3-proof-of-concept)
 2. [^2 I2C Slave Operation](#2-i2c-slave-operation)
 1. [^2 RS485 Full Duplex Loopback](#2-rs485-full-duplex-loopback)
 
+
+## ^4 Remote Reset of an RPUno
+
+I used an RPUftdi^4 to remotes reset an RPUno^6 with an RPUadpt^5 wired to a K3^2 board. A quick video shows picocom used to do the remote reset. 
+
+[^4 Remote Reset Video](http://rpubus.org/Video/RPUno%5E6_RPUadpt%5E5_RPUftdi%5E4_K3%5E2_RemoteReset.mp4 "^4 Remote Reset Video")
+
+![^4 Remote Reset](./RPUftdi^4_RPUno^6_RPUadpt^5_K3^2_RemoteReset.jpg "^4 Remote Reset")
+
+After the reset, the bootloader runs for a few seconds and then passes control to the [Solenoid] firmware which reads an address from the RPUadpt shield over I2C and cycles through each latching coil to place them in a known state. Reading the address from RPUadpt also lets the bus manager on that board broadcast a byte on the RS-485 bus management pair (DTR) that ends the lockout placed on other devices to allow a point to point bootload connection (i.e. a return to normal point to multipoint mode).
 
 ## ^4 Mounting
 

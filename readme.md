@@ -25,7 +25,7 @@ Shield used to connect a microcontroller and a USB host to a full duplex RS-422 
 
 ## [Hardware](./Hardware)
 
-Hardware files are in Eagle, there is also some testing, evaluation, and schooling notes for referance.
+Hardware files and notes for referance.
 
 
 ## Example
@@ -48,14 +48,13 @@ When avrdude opens the serial port it pulls the nDTR line low and the manager br
 
 ## AVR toolchain
 
-This is easy because it is packaged. Thanks Debain, Ubuntu, Raspibin, ...
+The core files for this board are in the /lib folder. Each example has its files and a Makefile in its own folder. The toolchain packages that I use are available on Ubuntu and Raspbian. 
 
-* sudo apt-get install [gcc-avr]
-* sudo apt-get install [binutils-avr]
-* sudo apt-get install [gdb-avr]
-* sudo apt-get install [avr-libc]
-* sudo apt-get install [avrdude]
-    
+```
+sudo apt-get install git [gcc-avr] [binutils-avr] [gdb-avr] [avr-libc] [avrdude]
+git clone https://github.com/epccs/RPUftdi
+```
+
 [gcc-avr]: http://packages.ubuntu.com/search?keywords=gcc-avr
 [binutils-avr]: http://packages.ubuntu.com/search?keywords=binutils-avr
 [gdb-avr]: http://packages.ubuntu.com/search?keywords=gdb-avr

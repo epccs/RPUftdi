@@ -1,4 +1,4 @@
-/* Host2Remote is for ATMega328 bus manager on RPUftdi board
+/* Remote is for bus manager on RPUadpt, Host2Remote is for RPUftdi
  This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
@@ -23,30 +23,27 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../lib/pin_num.h"
 #include "../lib/pins_board.h"
 
-//slave address, use numbers between 0x08 to 0x78
-#define TWI_ADDRESS 0x29
-// 0x30 is ascii char for the letter zero, this is the local address on RPU_BUS
-#define RPU_ADDRESS '0'  
-// Byte to send on DTR pair when FTDI_nDTR is active, it is the default address to reset.
-#define RPU_HOST_CONNECT '0' 
+//I2C_ADDRESS slave address is defined in the Makefile use numbers between 0x08 to 0x78
+// RPU_ADDRESS is defined in the Makefile it is used as an ascii characer
+// If the RPU_ADDRESS is defined as '1' then the addrss is 0x31. It may then be used as part of a textual command e.g. /1/id?
+// RPU_HOST_CONNECT is defined in the Makefile and is used as default address sent on DTR pair if FTDI_nDTR toggles
 // byte broadcast on DTR pair when HOST_nDTR (or HOST_nRTS) is no longer active
 #define RPU_HOST_DISCONNECT ~RPU_HOST_CONNECT
-// return to normal mode, remove lockout. Byte sent on DTR pair
+// return to normal mode address sent on DTR pair (haha... no it is not oFF it is a hex value)
 #define RPU_NORMAL_MODE 0x00
 // disconnect and set error status on DTR pair
 #define RPU_ERROR_MODE 0xFF
 
-// If the ID is matched in EEPROM then the rpu_address is taken from EEPROM
+// If this ID is matched in EEPROM then the rpu_address is taken from EEPROM
 #define EE_RPU_IDMAX 10
+
 const uint8_t EE_IdTable[] PROGMEM =
 {
     'R',
     'P',
     'U',
-    'f',
-    't',
-    'd',
     'i',
+    'd',
     '\0' // null term
 };
 #define EE_RPU_ID 40
@@ -85,8 +82,23 @@ static uint8_t write_rpu_address_to_eeprom;
 static uint8_t shutdown_detected;
 static uint8_t shutdown_started;
 
+// error_status bits
+#define DTR_READBACK_TIMEOUT 0
+#define DTR_TWI_TRANSMIT_FAIL 1
+#define DTR_READBACK_NOT_MATCH 2
+#define HOST_LOCKOUT_BY_I2C 3
+
 volatile uint8_t error_status;
 volatile uint8_t uart_output;
+
+// error_status bits
+#define TWI_COMMAND_TO_READ_RPU_ADDRESS 0
+#define TWI_COMMAND_TO_SET_RPU_ADDRESS 1
+#define TWI_COMMAND_TO_SHOW_ADDRESS_SENT_ON_ACTIVE_DTR 2
+#define TWI_COMMAND_TO_SET_ADDRESS_SENT_ON_ACTIVE_DTR 3
+#define TWI_COMMAND_TO_SHOW_SW_SHUTDOWN_DETECTED 4
+#define TWI_COMMAND_TO_SET_SW_FOR_SHUTDOWN 5
+
 
 // called when I2C data is received. 
 void receiveEvent(uint8_t* inBytes, int numBytes) 
@@ -106,9 +118,9 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
     txBufferLength = numBytes;
     if (txBufferLength > 1)
     {
-        if ( (txBuffer[0] == 0) ) // TWI command to read RPU_ADDRESS and activate normal mode on RPU bus
+        if ( (txBuffer[0] == TWI_COMMAND_TO_READ_RPU_ADDRESS) )
         {
-            txBuffer[1] = rpu_address; // '0' is 0x30
+            txBuffer[1] = rpu_address; // '1' is 0x31
             local_mcu_is_rpu_aware =1;
             
             // end the local mcu lockout. 
@@ -120,8 +132,7 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
                 printf("%c", uart_output); 
                 uart_has_TTL = 1; // causes host_is_foreign to be false
             }
-            else
-            {
+            else 
                 if (bootloader_started)
                 {
                     // If the bootloader_started has not timed out yet broadcast on DTR pair
@@ -135,28 +146,28 @@ void receiveEvent(uint8_t* inBytes, int numBytes)
                     lockout_started_at = millis() - LOCKOUT_DELAY;
                     bootloader_started_at = millis() - BOOTLOADER_ACTIVE;
                 }
-            }
         }
-        if ( (txBuffer[0] == 1) ) // set rpu_bus address and write it to eeprom
+        if ( (txBuffer[0] == TWI_COMMAND_TO_SET_RPU_ADDRESS) )
         {
             rpu_address = txBuffer[1];
             write_rpu_address_to_eeprom = 1;
         }
-        if ( (txBuffer[0] == 2) ) // read byte sent on DTR pair when FTDI_nDTR toggles
-        {
+        if ( (txBuffer[0] == TWI_COMMAND_TO_SHOW_ADDRESS_SENT_ON_ACTIVE_DTR) )
+        {  // read byte sent when HOST_nDTR toggles
             txBuffer[1] = bootloader_address;
         }
-        if ( (txBuffer[0] == 3) ) // buffer the byte that is sent on DTR pair when FTDI_nDTR toggles
-        {
+        if ( (txBuffer[0] == TWI_COMMAND_TO_SET_ADDRESS_SENT_ON_ACTIVE_DTR) ) 
+        { // buffer the byte that is sent when HOST_nDTR toggles
             bootloader_address = txBuffer[1];
         }
-        if ( (txBuffer[0] == 4) ) // when ICP1 pin is pulled  down the host (Pi Zero on RPUp) should hault
-        {
+        if ( (txBuffer[0] == TWI_COMMAND_TO_SHOW_SW_SHUTDOWN_DETECTED) ) 
+        { // when ICP1 pin is pulled  down the host (e.g. Pi Zero on RPUpi) should hault
             txBuffer[1] = shutdown_detected;
-            shutdown_detected = 0; // clear shutdown_detected
+             // reading clears this flag that was set in check_shutdown() but it is up to the I2C master to do somthing about it.
+            shutdown_detected = 0;
         }
-        if ( (txBuffer[0] == 5) ) // pull ICP1 pin low to hault the host (Pi Zero on RPUp)
-        {
+        if ( (txBuffer[0] == TWI_COMMAND_TO_SET_SW_FOR_SHUTDOWN) ) 
+        { // pull ICP1 pin low to hault the host (e.g. Pi Zero on RPUpi)
             if (txBuffer[1] == 1)
             {
                 pinMode(SHUTDOWN, OUTPUT);
@@ -186,7 +197,7 @@ void slaveTransmit(void)
     // respond with an echo of the last message sent
     uint8_t return_code = twi_transmit(txBuffer, txBufferLength);
     if (return_code != 0)
-        error_status &= (1<<1); // bit one set 
+        error_status &= (1<<DTR_TWI_TRANSMIT_FAIL);
 }
 
 void connect_normal_mode(void)
@@ -207,7 +218,7 @@ void connect_normal_mode(void)
         digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior to output to FTDI_RX input
     }
 
-    // connect both the local mcu and host/ftdi uart if mcu is rpu aware, otherwise block MCU from using the TX pair
+     // connect both the local mcu and host/ftdi uart if mcu is rpu aware, otherwise block MCU from using the TX pair
     else
     {
         digitalWrite(RX_DE, HIGH); // allow RX pair driver to enable if FTDI_TX is low
@@ -270,12 +281,14 @@ void setup(void)
 {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
-    pinMode(FTDI_nRTS, INPUT); // FTDI's UART bridg should pull this down when host is active
-    pinMode(FTDI_nCTS, OUTPUT);
-    digitalWrite(FTDI_nCTS, LOW);
-    pinMode(FTDI_nDTR, INPUT); // FTDI's UART bridg should pull this down when host is active (I've seen it stuck low, and need a power cycle)
-    pinMode(FTDI_nDSR, OUTPUT);
-    digitalWrite(FTDI_nDSR, LOW);
+    pinMode(HOST_nRTS, INPUT);
+    digitalWrite(HOST_nRTS, HIGH); // with AVR when the pin DDR is set as an input setting pin high will trun on a weak pullup 
+    pinMode(HOST_nCTS, OUTPUT);
+    digitalWrite(HOST_nCTS, LOW);
+    pinMode(HOST_nDTR, INPUT);
+    digitalWrite(HOST_nDTR, HIGH); // another weak pullup 
+    pinMode(HOST_nDSR, OUTPUT);
+    digitalWrite(HOST_nDSR, LOW);
     pinMode(RX_DE, OUTPUT);
     digitalWrite(RX_DE, HIGH);  // allow RX pair driver to enable if FTDI_TX is low
     pinMode(RX_nRE, OUTPUT);
@@ -305,7 +318,7 @@ void setup(void)
     /* Initialize UART, it returns a pointer to FILE so redirect of stdin and stdout works*/
     stdout = stdin = uartstream0_init(BAUD);
 
-    twi_setAddress(TWI_ADDRESS);
+    twi_setAddress(I2C_ADDRESS);
     twi_attachSlaveTxEvent(slaveTransmit); // called when I2C data is requested 
     twi_attachSlaveRxEvent(receiveEvent); // slave receive
     twi_init(false); // do not use internal pull-up
@@ -314,7 +327,7 @@ void setup(void)
     
     _delay_ms(50); // wait for UART glitch to clear
     digitalWrite(DTR_DE, HIGH);  // allow DTR pair driver to enable if DTR_TXD is low
-
+    
     // check if eeprom ID is valid
     uint8_t EE_id_valid = 0;
     for(uint8_t i = 0; i <EE_RPU_IDMAX; i++)
@@ -343,14 +356,16 @@ void setup(void)
     {
         rpu_address = RPU_ADDRESS;
     }
-
+    
     // is foreign host in control? (ask over the DTR pair)
     uart_has_TTL = 0;
     
+#if defined(DISCONNECT_AT_PWRUP)
     // at power up send a byte on the DTR pair to unlock the bus (this is a problem if foreign host is in control)
     uart_started_at = millis();
     uart_output= RPU_HOST_DISCONNECT;
     printf("%c", uart_output); 
+#endif
 }
 
 // blink if the host is active, fast blink if error status, slow blink in lockout
@@ -425,7 +440,7 @@ void check_DTR(void)
 {
     if (!host_is_foreign)
     {
-        if ( !digitalRead(FTDI_nDTR) )  // both FTDI_nDTR and FTDI_nRTS are set (active low) when avrdude tries to use the bootloader
+        if ( !digitalRead(HOST_nDTR) )  // both HOST_nDTR and HOST_nRTS are set (active low) when avrdude tries to use the bootloader
         { 
             if ( !(bootloader_started  || lockout_active || host_active || uart_has_TTL) )
             {
@@ -461,19 +476,20 @@ void check_lockout(void)
     if ( lockout_active && (kRuntime > LOCKOUT_DELAY))
     {
         connect_normal_mode();
+
         host_active = 1;
         lockout_active =0;
     }
 }
 
-/* The RPUftdi UART is connected to the DTR pair which is half duplex, 
+/* The RPUadpt UART is connected to the DTR pair which is half duplex, 
      but is self enabling when TX is pulled low.
 */
 void check_uart(void)
 {
     unsigned long kRuntime = millis() - uart_started_at;
  
-   if ( uart0_available() && !(uart_has_TTL && (kRuntime > UART_TTL) ) )
+    if ( uart0_available() && !(uart_has_TTL && (kRuntime > UART_TTL) ) )
     {
         uint8_t input;
         input = (uint8_t)(getchar());
@@ -485,7 +501,7 @@ void check_uart(void)
         {
             if(input != uart_output) 
             { // sent byte does not match,  but I'm not to sure what would cause this.
-                error_status &= (1<<2); // bit two set 
+                error_status &= (1<<DTR_READBACK_NOT_MATCH);
             }
             uart_has_TTL = 0;
             host_is_foreign = 0;
@@ -503,10 +519,10 @@ void check_uart(void)
         }
 
         if (input == RPU_NORMAL_MODE) // end the lockout or bootloader if it was set.
-        {
+        { 
             lockout_started_at = millis() - LOCKOUT_DELAY;
             bootloader_started_at = millis() - BOOTLOADER_ACTIVE;
-            digitalWrite(LED_BUILTIN, HIGH);
+            digitalWrite(LED_BUILTIN, LOW);
             blink_started_at = millis();
         }
         else if (input == rpu_address) // that is my local address
@@ -529,7 +545,7 @@ void check_uart(void)
             host_active =0;
 
             connect_lockout_mode();
-            
+
             lockout_started_at = millis();
             blink_started_at = millis();
         }
@@ -544,11 +560,11 @@ void check_uart(void)
             digitalWrite(RX_nRE, HIGH);  // disable RX pair recevior to output to local MCU's RX input
             digitalWrite(TX_DE, LOW); // disallow TX pair driver to enable if TX (from MCU) is low
             digitalWrite(TX_nRE, HIGH);  // disable TX pair recevior that outputs to FTDI_RX input
-        }
+        } 
     }
     else if (uart_has_TTL && (kRuntime > UART_TTL) )
-    { // perhaps the DTR line is stuck (e.g. someone has pulled it low) so we time out
-        error_status &= (1<<0); // bit zero set 
+    { // perhaps the DTR line is stuck (e.g. someone has pulled it low) so may need to time out
+        error_status &= (1<<DTR_READBACK_TIMEOUT);
         uart_has_TTL = 0;
     }
 }

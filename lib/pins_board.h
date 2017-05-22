@@ -26,7 +26,9 @@
 
 #define DTR_RXD 0
 #define DTR_TXD 1
+#define HOST_nDTR 2
 #define FTDI_nDTR 2
+#define HOST_nRTS 3
 #define FTDI_nRTS 3
 #define RX_nRE 4
 #define TX_DE 5
@@ -41,7 +43,9 @@
 #define MISO 12
 #define SCK 13
 
+#define HOST_nCTS 14
 #define FTDI_nCTS 14
+#define HOST_nDSR 15
 #define FTDI_nDSR 15
 #define TX_nRE 16
 #define RX_DE 17

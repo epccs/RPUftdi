@@ -1,6 +1,6 @@
 # Host2Remote
 
-This bus manager firmware is for an RPUftdi board, it will send a byte (RPU_HOST_CONNECT) over the DTR pair when when the HOST_nDTR and/or HOST_nRTS becomes active. It will also watch for a byte matching the local RPU_ADDRESS on the DTR pair and when seen reset the local MCU board placing it in bootloader mode. A non-matching byte will disconnect RS-422 from the RX and TX to the shield headers placing it in lockout mode.
+This bus manager firmware is for an RPUftdi board, it will send a byte (RPU_HOST_CONNECT) over the DTR pair when the HOST_nDTR and/or HOST_nRTS becomes active. It will also watch for a byte matching the local RPU_ADDRESS on the DTR pair and when seen reset the local MCU board placing it in bootloader mode. A non-matching byte will disconnect RS-422 from the RX and TX to the shield headers placing it in lockout mode.
 
 ## Overview
 

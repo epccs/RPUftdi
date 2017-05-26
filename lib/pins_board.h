@@ -1,5 +1,5 @@
 /*
- * Pin definitions for use with DigitalIO library
+ * RPUftdi Pin definitions for use with DigitalIO library
  * Copyright (C) 2016 Ronald Sutherland
  *
  * This Library is free software: you can redistribute it and/or modify
@@ -55,6 +55,5 @@
 
 // these are ADC channels, they do not have digital IO function on ATmega328p
 #define USB5V_ADC6 6
-#define VIN_ADC7 7
 
 #endif // Pins_Board_h

@@ -53,7 +53,7 @@
 #define SDA 18
 #define SCL 19
 
-// these are ADC channels, they do not have digital IO function on ATmega328p
-#define USB5V_ADC6 6
+// these are ADC channels, they are selected with a mux
+#define ADC6_5V 6
 
 #endif // Pins_Board_h

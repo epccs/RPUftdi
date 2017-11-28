@@ -4,13 +4,12 @@ From <https://github.com/epccs/RPUftdi>
 
 ## Overview
 
-Shield used to connect a microcontroller and a USB host to a full duplex RS-422 (RX and TX pairs) and an out of band half duplex RS-485 (DTR pair) over CAT5. It's a multidrop bus between a host (e.g. Pi Zero on [RPUpi] or no host with [RPUadpt]) and an MCU board (e.g. [RPUno]).
+Shield used to connect a controller board to full duplex RS-422 (RX and TX pairs). An out of band half duplex RS-485 (DTR pair) is used for management. CAT5 with RJ-45 connectors is used to run the pairs. It results in a serial bus between a host with USB and a local controller board (e.g. [RPUno]) that can be extended as multi drops through additional [RPUadpt].
 
-[RPUno]: https://github.com/epccs/RPUno
 [RPUpi]: https://github.com/epccs/RPUpi
 [RPUadpt]: https://github.com/epccs/RPUadpt
-
-
+[RPUno]: https://github.com/epccs/RPUno
+[Irrigate7]: https://github.com/epccs/Irrigate7
 
 [Forum](http://rpubus.org/bb/viewforum.php?f=5)
 
@@ -22,7 +21,7 @@ Available through [Tindie](https://www.tindie.com/products/ron-sutherland/rpufti
 
 ![Status](./Hardware/status_icon.png "Status")
 
-This shield is programmed with an in-circuit serial programming tool that is able to do a 3.3V ATmega328p target. I use an Arduino Uno with the [ArduinoISP] sketch and an SPI level shifter (e.g. [ICSP]).
+This shield is programmed with an in-circuit serial programming tool that is able to handle the 3.3V ATmega328p target. I use an Arduino Uno with the [ArduinoISP] sketch and an SPI level shifter (e.g. [ICSP]). A Raspberry Pi should also work with the avrdude bit-bang (-c linuxgpio) or SPI (-c linuxspi) modes.
 
 [ICSP]: https://github.com/epccs/Driver/tree/master/ICSP
 
@@ -35,7 +34,7 @@ Hardware files and notes for referance.
 
 ## Example
 
-A multi-drop serial bus allows multiple microcontroller boards to be connected to a host serial port. The host computer needs to be near the RPUftdi board because USB works over short distances (about 2 meters). The host serial handshake signals are connected to the bus manager microcontroller which is also connected to the transceivers. The goal is to have a multidrop connection that configures automatically when the host activates the FTDI UART bridge.  Additionally, it is desired to have zero software [magic] for control of the transceivers. The microcontrollers also do not need to control the transceivers, but only one should be allowed to talk.
+This multi-drop serial bus allows multiple controller boards to be connected to a host serial port (UART). Crossover of the serial from the host computer occurs as it enters the transceivers on the shield. The differential pair from the transceives is run through a patch cable (CAT5) between the controllers, so all the controllers see the same interface. The transceivers differential driver is automatically enabled when a UART pulls its output low, which means no software [magic] is needed to operate a push to talk based system, though it is up to the user software to ensure the controllers talk in a reasonable way (e.g. without collision). The bus transceivers can't cross conduct while trying to drive the differential pair (e.g. when multiple devices with the same address answer, or more likely my firmware is barking at the shadows).
 
 [magic]: https://github.com/pyserial/pyserial/blob/master/serial/rs485.py
 

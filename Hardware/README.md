@@ -11,8 +11,7 @@ Eagle Files, BOM, Status, and how to Test.
 * Half Duplx RS-485 out of band management (DTR) pair.
 * Fail Safe state (high) when differential line is undriven.
 * Resting state of differential pair (RX, TX and DTR) is undriven.
-* Fits RPUno, Irrigate7, and PulseDAQ boards.
-* May also fit other Arduino compatible boards.
+* Fits RPUno.
 * USB soft start prevents brownout of other devices during hot plugging.
 * Power from USB (after soft start) is is given to +5V on the MCU node board.
 * FTDI UART allows a HOST to connect to RX and TX pairs.
@@ -104,7 +103,7 @@ Import the [BOM](./Design/14145,BOM.csv) into LibreOffice Calc (or Excel) with s
 
 # How To Use
 
-RPUftdi is a shield that mounts on an RPUno or Irrigate7 as expected.
+RPUftdi is a shield that mounts on an RPUno or Irrigate7.
 
 ![Irrigate7 Mount](./Evaluation/14145^3_OnIrrigate7.jpg "Irrigate7 Mount")
 
@@ -112,7 +111,7 @@ Also mounts on an Uno with the extra pins dangling over (they are not used on th
 
 ![Uno Mount](./Evaluation/14145^4_OnUno.jpg "Uno Mount")
 
-Typically I use the RPUftdi with an Uno clone since I don't have a solar panel next to my computer. The clone is powered from the USB connection on the RPUftdi board (do not connect the USB on the clone).
+Typically I use the RPUftdi with an Uno clone since I don't have a solar panel at my bench. The clone is powered from the USB connection on the RPUftdi board (do not connect the USB on the clone).
 
 The shield has a bus manager MCU that is used to control the RS-422 transceivers. I program it with an ISP tool using avrdude. The [Toolchain] is found on Ubuntu and Raspbian. For the ISP tool, I use an SPI level converter since the bus manager is at 3.3V and load an Uno board with the ArduinoISP sketch from Arduino.cc IDE (1.6.7+) example sketches. Firmware examples (most used for testing) are found in other folders of this repository, but the one I primarily use is [Host2Remote].
 

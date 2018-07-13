@@ -124,6 +124,6 @@ Note: Obtaining a rugged ISP tool is a dilemma, I would like to suggest an AVRIS
 
 The CAT5 needs wired just like an Ethernet cable following [T568A] or T568B method. 
 
-[T568A]: http://en.wikipedia.org/wiki/Category_5_cable
+[T568A]: https://en.wikipedia.org/wiki/Category_5_cable
 
 Grounding should occur at one location only. The host frame will connect the USB to ground which also runs through the CAT5. Unfortunately, the ground wires within CAT5 will not survive a lightning strike and will bring it to the host. To reduce the risk, run a #14 AWG ground wire between the remote device(s) and the ground system connected to the host chassis. Tie the 0V of each remote device to the ground with a 100k resistor. Also, the host chassis needs a good (#14 AWG or larger) wire to the ground system.

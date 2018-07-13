@@ -11,7 +11,7 @@ Shield used to connect a controller board to full duplex RS-422 (RX and TX pairs
 [RPUno]: https://github.com/epccs/RPUno
 [Irrigate7]: https://github.com/epccs/Irrigate7
 
-[Forum](http://rpubus.org/bb/viewforum.php?f=5)
+[Forum](https://rpubus.org/bb/viewforum.php?f=5)
 
 [HackADay](https://hackaday.io/project/15585-rpuftid)
 
@@ -55,12 +55,12 @@ When avrdude opens the serial port it pulls the nDTR line low and the manager br
 The core files for this board are in the /lib folder. Each example has its files and a Makefile in its own folder. The toolchain packages that I use are available on Ubuntu and Raspbian. 
 
 ```
-sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
+sudo apt-get install git make gcc-avr binutils-avr gdb-avr avr-libc avrdude
 git clone https://github.com/epccs/RPUadpt
 ```
 
-* [gcc-avr](http://packages.ubuntu.com/search?keywords=gcc-avr)
-* [binutils-avr](http://packages.ubuntu.com/search?keywords=binutils-avr)
-* [gdb-avr](http://packages.ubuntu.com/search?keywords=gdb-avr)
-* [avr-libc](http://packages.ubuntu.com/search?keywords=avr-libc)
-* [avrdude](http://packages.ubuntu.com/search?keywords=avrdude)
+* [gcc-avr](https://packages.ubuntu.com/search?keywords=gcc-avr)
+* [binutils-avr](https://packages.ubuntu.com/search?keywords=binutils-avr)
+* [gdb-avr](https://packages.ubuntu.com/search?keywords=gdb-avr)
+* [avr-libc](https://packages.ubuntu.com/search?keywords=avr-libc)
+* [avrdude](https://packages.ubuntu.com/search?keywords=avrdude)

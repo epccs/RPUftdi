@@ -2,27 +2,22 @@
 
 ## Overview
 
-Eagle Files, BOM, Status, and how to Test.
+USB interface for the RPUbus. It plugs into an R-Pi header (e.g., [RPUpi] or [Gravimetric]). The full-duplex multidrop bus is directly connected to one of the duel USB UART's, while the second USB UART is connected to an MCU (ATmega328pb) that can act as a bridge for many of the R-Pi header functions (e.g., SPI, I2C) from the target board. A USB host will be able to set the bootload address on the RPUbus with the I2C interface bridged, initiate a shutdown, and other functions that an R-Pi has access to from the manager.
+
+[Gravimetric]: https://github.com/epccs/Gravimetric
+[RPUpi]: https://github.com/epccs/RPUpi
 
 
 ## Inputs/Outputs/Functions
 
-* Full Duplex RS-422 multi-drop RX and TX pairs.
-* Half Duplx RS-485 out of band management (DTR) pair.
-* Fail Safe state (high) when differential line is undriven.
-* Resting state of differential pair (RX, TX and DTR) is undriven.
-* Fits RPUno.
-* USB soft start prevents brownout of other devices during hot plugging.
-* Power from USB (after soft start) is is given to +5V on the MCU node board.
-* FTDI UART allows a HOST to connect to RX and TX pairs.
-* FTDI UART nDTR and nRTS connect to BUS manager.
-* I2C Interface between BUS manager and MCU node.
+* Full Duplex TX and RX from USB serial0 on R-Pi header pin 8 and 10.
+* RTS and CTS from USB serial0 on R-Pi header pin 36 and 11.
+* USB serial1 connects with an ATmega328pb for use as I2C/SPI debug bridge.
+* Fits RPUpi or Gravimetric.
 
 ## Uses
 
-* Multi-drop communication.
-* Allows firmware uploads with optiboot or xboot using avrdude.
-* Open Hardware, with example bus manager firmware.
+* Plugs in place of an R-Pi to allow USB from a computer to communicate with an RPU target.
 
 
 # Table Of Contents
@@ -38,9 +33,9 @@ Eagle Files, BOM, Status, and how to Test.
 ![Status](./status_icon.png "RPUftdi Status")
 
 ```
-        ^5  Done: Design, Layout,
-            WIP: BOM,
-            Todo: Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^5  Done: Design, Layout, BOM,
+            WIP: Review*,
+            Todo: Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             # remove arduino headers
             # add header with 40 pin R-Pi pinout
@@ -73,21 +68,21 @@ Setup and methods used for [Evaluation](./Evaluation/)
 
 The board is 0.063 thick, FR4, two layer, 1 oz copper with ENIG (gold) finish.
 
-![Top](./Documents/14145,Top.png "RPUno Top")
-![TAssy](./Documents/14145,TAssy.jpg "RPUno Top Assy")
-![Bottom](./Documents/14145,Bottom.png "RPUno Bottom")
-![BAssy](./Documents/14145,BAssy.jpg "RPUno Bottom Assy")
+![Top](./Documents/14145,Top.png "RPUusb Top")
+![TAssy](./Documents/14145,TAssy.jpg "RPUusb Top Assy")
+![Bottom](./Documents/14145,Bottom.png "RPUusb Bottom")
+![BAssy](./Documents/14145,BAssy.jpg "RPUusb Bottom Assy")
 
 
 ## Mounting
 
 ```
-        Shield for RPUno, Irrigate7, and PulseDAQ.
+        Plugs into the R-Pi header of an RPUbus board.
 ```
 
 ## Electrical Schematic
 
-![Schematic](./Documents/14145,Schematic.png "RPUftdi Schematic")
+![Schematic](./Documents/14145,Schematic.png "RPUusb Schematic")
 
 ## Testing
 
@@ -97,32 +92,21 @@ Check correct assembly and function with [Testing](./Testing/)
 
 # Bill of Materials
 
-Import the [BOM](./Design/14145,BOM.csv) into LibreOffice Calc (or Excel) with semicolon separated values, or use a text editor.
+The BOM is a CVS file, import it into a spreadsheet program like LibreOffice Calc (or Excel), or use a text editor.
+
+Option | BOM's included
+----- | ----- 
+A. | [BRD] 
+M. | [BRD] [SMD] [HDR] 
+
+
+[BRD]: ./Design/14145BRD,BOM.csv
+[SMD]: ./Design/14145SMD,BOM.csv
+[HDR]: ./Design/14145HDR,BOM.csv
+
+[Order Form](https://rpubus.org/Order_Form.html)
 
 
 # How To Use
 
-RPUftdi is a shield that mounts on an RPUno or Irrigate7.
-
-![Irrigate7 Mount](./Evaluation/14145^3_OnIrrigate7.jpg "Irrigate7 Mount")
-
-Also mounts on an Uno with the extra pins dangling over (they are not used on the shield). 
-
-![Uno Mount](./Evaluation/14145^4_OnUno.jpg "Uno Mount")
-
-Typically I use the RPUftdi with an Uno clone since I don't have a solar panel at my bench. The clone is powered from the USB connection on the RPUftdi board (do not connect the USB on the clone).
-
-The shield has a bus manager MCU that is used to control the RS-422 transceivers. I program it with an ISP tool using avrdude. The [Toolchain] is found on Ubuntu and Raspbian. For the ISP tool, I use an SPI level converter since the bus manager is at 3.3V and load an Uno board with the ArduinoISP sketch from Arduino.cc IDE (1.6.7+) example sketches. Firmware examples (most used for testing) are found in other folders of this repository, but the one I primarily use is [Host2Remote].
-
-[Toolchain]: https://github.com/epccs/RPUftdi#avr-toolchain
-[Host2Remote]: https://github.com/epccs/RPUftdi/tree/master/Host2Remote
-
-__Warning:__ the RPUftdi bus manager is powered with 3.3V so a 5V  ICSP tool needs to have a level converter.
-
-Note: Obtaining a rugged ISP tool is a dilemma, I would like to suggest an AVRISP mkII but Atmel no longer makes them. I have an AVR Dragon and it is working with avrdude on Ubuntu and Raspbian but it is not very rugged so I normally use the Arduino ISP sketch and a level shifter for the MOSI, MISO, and SCK pins.
-
-The CAT5 needs wired just like an Ethernet cable following [T568A] or T568B method. 
-
-[T568A]: https://en.wikipedia.org/wiki/Category_5_cable
-
-Grounding should occur at one location only. The host frame will connect the USB to ground which also runs through the CAT5. Unfortunately, the ground wires within CAT5 will not survive a lightning strike and will bring it to the host. To reduce the risk, run a #14 AWG ground wire between the remote device(s) and the ground system connected to the host chassis. Tie the 0V of each remote device to the ground with a 100k resistor. Also, the host chassis needs a good (#14 AWG or larger) wire to the ground system.
+TDD

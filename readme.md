@@ -17,7 +17,7 @@ Shield used to connect a controller board to full duplex RS-422 (RX and TX pairs
 
 ## Status
 
-Available through [Tindie](https://www.tindie.com/products/ron-sutherland/rpuftid-a-shield-for-usb-to-rs-422-over-cat5/)
+[Available](https://rpubus.org/Order_Form.html)
 
 ![Status](./Hardware/status_icon.png "Status")
 

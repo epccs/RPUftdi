@@ -38,8 +38,23 @@ Eagle Files, BOM, Status, and how to Test.
 ![Status](./status_icon.png "RPUftdi Status")
 
 ```
-        ^4 Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing,
-           WIP: Evaluation.
+        ^5  Done: Design, Layout,
+            WIP: BOM,
+            Todo: Review*, Order Boards, Assembly, Testing, Evaluation.
+            *during review the Design may change without changing the revision.
+            # remove arduino headers
+            # add header with 40 pin R-Pi pinout
+            # swap MCU to ATmega328pb
+            # swap ftdi with a dual UART port version Silabs CP2105
+            # connect serial0 to RX/TX/nRTS/nCTS on R-Pi header
+            # connect sierial1 to MCU's serial0
+            # connect MCU's I2C0 to I2C on R-Pi header
+            # connect MCU's I2C1 to the ID port on R-Pi header
+            # connect MCU's SPI to SPI on R-Pi header
+            # power with 3V3 from LDO and power the LDO from the USB header through the P-CH soft start. 
+
+        ^4 Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
+           WIP: 
            Todo:  
            *during review the Design may change without changing the revision.
            location: 2017-3-17 Test Bench /w an OSEPP Uno R3
@@ -63,22 +78,6 @@ The board is 0.063 thick, FR4, two layer, 1 oz copper with ENIG (gold) finish.
 ![Bottom](./Documents/14145,Bottom.png "RPUno Bottom")
 ![BAssy](./Documents/14145,BAssy.jpg "RPUno Bottom Assy")
 
-## Electrical Parameters (Typical)
-
-```
-TBD
-USB type: FT231X
-BUS manager MCU type: ATmega328p
-BUS manager MCU clock: 8MHz internal
-BUS manager MCU Voltage: 3.3V (e.g. IOREF is 5V)
-```
-
-## Operating Temperature
-
-```
-        0 to +70 deg C
-        This is OSH so refer to the parts used for storage and operation limits.
-```
 
 ## Mounting
 

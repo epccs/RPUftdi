@@ -4,11 +4,16 @@ Some lessons I learned doing RPUftdi.
 
 # Table Of Contents:
 
-5. [^3 Baud Rate](#3-baud-rate)
-4. [^3 Bus Manager ICP1 Used to Hault Host](#3-bus-manager-icp1-used-to-hault-host)
-3. [^3 FT231X Problem Toggling nDTR and nRTS](#3-ft231x-problem-toggling-ndtr-and-nrts)
-2. [^2 I2C Level Converter](#2-i2c-level-converter)
+1. [^4 Power Chopping](#4-power-chopping)
+1. [^3 Baud Rate](#3-baud-rate)
+1. [^3 Bus Manager ICP1 Used to Hault Host](#3-bus-manager-icp1-used-to-hault-host)
+1. [^3 FT231X Problem Toggling nDTR and nRTS](#3-ft231x-problem-toggling-ndtr-and-nrts)
+1. [^2 I2C Level Converter](#2-i2c-level-converter)
 1. [^2 Brick Bus Management MCU](#2-brick-bus-management-mcu)
+
+## ^4 Power Chopping
+
+Transceivers start and stop (chop) the power flow over the USB cable; occasionally it results in a reset of the host computer. Mixing power and data is risky; the next version of this board should not power the transceivers from the USB.
 
 
 ## ^3 Baud Rate 

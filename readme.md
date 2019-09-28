@@ -16,7 +16,7 @@ USB interface for the RPUbus. It plugs into an R-Pi header (e.g., [RPUpi] or [Gr
 
 ![Status](./Hardware/status_icon.png "Status")
 
-This is programmed with an in-circuit serial programming tool that is able to handle the 3.3V ATmega328p target. I use an Arduino Uno with the [ArduinoISP] sketch and an SPI level shifter. A Raspberry Pi also works with the [ICSP].
+This is programmed with an in-circuit serial programming tool that is able to handle the 3.3V ATmega328pb target. I use an Arduino Uno with the [ArduinoISP] sketch and an SPI level shifter. A Raspberry Pi also works with the [ICSP].
 
 [ICSP]: https://github.com/epccs/Driver/tree/master/ICSP
 

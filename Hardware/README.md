@@ -33,9 +33,9 @@ USB interface for the RPUbus. It plugs into an R-Pi header (e.g., [RPUpi] or [Gr
 ![Status](./status_icon.png "RPUftdi Status")
 
 ```
-        ^5  Done: Design, Layout, BOM,
-            WIP: Review*,
-            Todo: Order Boards, Assembly, Testing, Evaluation.
+        ^5  Done: Design, Layout, BOM, Review*,
+            WIP: Order Boards,
+            Todo: Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             # remove arduino headers
             # add header with 40 pin R-Pi pinout

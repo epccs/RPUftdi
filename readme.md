@@ -1,14 +1,12 @@
-# RPUftdi
+# RPUusb
 
-From <https://github.com/epccs/RPUftdi>
+From <https://github.com/epccs/RPUusb>
 
 ## Overview
 
-USB interface for the RPUbus. It plugs into an R-Pi header (e.g., [RPUpi] or [Gravimetric]). The full-duplex multidrop bus is directly connected to one of the duel USB UART's, while the second USB UART is connected to an MCU (ATmega328pb) that can act as a bridge for many of the R-Pi header functions (e.g., SPI, I2C) from the target board. A USB host will be able to set the bootload address on the RPUbus with the I2C interface bridged, initiate a shutdown, and other functions that an R-Pi has access to from the manager.
+Alow a desktop or other host with USB to interface with [Gravimetric] that have an R-Pi header. It has two UARTs that can together operate the multi-drop serial. 
 
 [Gravimetric]: https://github.com/epccs/Gravimetric
-[RPUpi]: https://github.com/epccs/RPUpi
-
 
 ## Status
 
@@ -37,7 +35,7 @@ The core files for this board are in the /lib folder. Each example has its files
 
 ```
 sudo apt-get install git make gcc-avr binutils-avr gdb-avr avr-libc avrdude
-git clone https://github.com/epccs/RPUftdi
+git clone https://github.com/epccs/RPUusb
 ```
 
 * [gcc-avr](https://packages.ubuntu.com/search?keywords=gcc-avr)

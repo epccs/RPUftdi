@@ -2,17 +2,16 @@
 
 ## Overview
 
-USB interface for the RPUbus. It plugs into an R-Pi header (e.g., [RPUpi] or [Gravimetric]). The full-duplex multidrop bus is directly connected to one of the duel USB UART's, while the second USB UART is connected to an MCU (ATmega328pb) that can act as a bridge for many of the R-Pi header functions (e.g., SPI, I2C) from the target board. A USB host will be able to set the bootload address on the RPUbus with the I2C interface bridged, initiate a shutdown, and other functions that an R-Pi has access to from the manager.
+USB interface that plugs in place of an R-Pi. It plugs into an R-Pi header (e.g., [Gravimetric]). The CP2105 chip has two UARTs. The full-duplex multidrop bus is directly connected to the primary UART, while the secondary UART is connected to an MCU (ATmega328pb) that can act as a bridge for many of the R-Pi header pins (e.g., SPI, I2C) from the target board. A USB host can set the bootload address on the multi-drop serial with the I2C interface from the 328pb, and some other functions that an R-Pi has access to from the manager.
 
 [Gravimetric]: https://github.com/epccs/Gravimetric
-[RPUpi]: https://github.com/epccs/RPUpi
 
 
 ## Inputs/Outputs/Functions
 
 * Full Duplex TX and RX from USB serial0 on R-Pi header pin 8 and 10.
 * RTS and CTS from USB serial0 on R-Pi header pin 36 and 11.
-* USB serial1 connects with an ATmega328pb for use as I2C/SPI debug bridge.
+* USB serial1 connects with an ATmega328pb for use with I2C/SPI.
 * Fits RPUpi or Gravimetric.
 
 ## Uses
@@ -30,7 +29,7 @@ USB interface for the RPUbus. It plugs into an R-Pi header (e.g., [RPUpi] or [Gr
 
 # Status
 
-![Status](./status_icon.png "RPUftdi Status")
+![Status](./status_icon.png "RPUusb Status")
 
 ```
         ^5  Done: Design, Layout, BOM, Review*,
@@ -77,7 +76,7 @@ The board is 0.063 thick, FR4, two layer, 1 oz copper with ENIG (gold) finish.
 ## Mounting
 
 ```
-        Plugs into the R-Pi header of an RPUbus board.
+        Plugs into the R-Pi header of a multi-drop serial board.
 ```
 
 ## Electrical Schematic

@@ -32,9 +32,9 @@ USB interface that plugs in place of an R-Pi. It plugs into an R-Pi header (e.g.
 ![Status](./status_icon.png "RPUusb Status")
 
 ```
-        ^5  Done: Design, Layout, BOM, Review*,
-            WIP: Order Boards,
-            Todo: Assembly, Testing, Evaluation.
+        ^5  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, 
+            WIP: Testing,
+            Todo: Evaluation.
             *during review the Design may change without changing the revision.
             # remove arduino headers
             # add header with 40 pin R-Pi pinout

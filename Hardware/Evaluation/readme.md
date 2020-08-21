@@ -1,18 +1,26 @@
 # Description
 
-This shows the setup and method used for evaluation of RPUftdi.
+This shows the setup and method used for evaluation of RPUusb.
 
 # Table of References
 
 
 # Table Of Contents:
 
-6. [^4 Remote Reset of an RPUno](#4-remote-reset-of-an-rpuno)
-5. [^4 Mounting](#4-mounting)
-4. [^4 Bus Manager Running at 12MHz](#4-bus-manager-running-at-12mhz)
-3. [^3 Proof of Concept](#3-proof-of-concept)
-2. [^2 I2C Slave Operation](#2-i2c-slave-operation)
-1. [^2 RS485 Full Duplex Loopback](#2-rs485-full-duplex-loopback)
+1. ^5 Mounting
+1. ^4 Remote Reset of an RPUno
+1. ^4 Mounting
+1. ^4 Bus Manager Running at 12MHz
+1. ^3 Proof of Concept
+1. ^2 I2C Slave Operation
+1. ^2 RS485 Full Duplex Loopback
+
+
+## ^5 Mounting
+
+Arduino style headers have been removed; the 40pin header is for a Raspberry Pi (or other SBC with that style pinout). The RPUusb (renamed from RPUftdi) is now set up to interface with the 20x2 header. It has a dual UART USB chip (not FTDI hence the name change) where the primary serial port is for the multidrop, and the secondary connects to a 328pb that interfaces its I2C pins where the R-Pi does (also SPI). The secondary serial is picky about baud rates, have a look at the CP2105 datasheet for details.
+
+https://www.silabs.com/documents/public/data-sheets/CP2105.pdf
 
 
 ## ^4 Remote Reset of an RPUno

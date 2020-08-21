@@ -1,15 +1,22 @@
 # Description
 
-Some lessons I learned doing RPUftdi.
+Some lessons I learned doing RPUusb.
 
 # Table Of Contents:
 
-1. [^4 Power Chopping](#4-power-chopping)
-1. [^3 Baud Rate](#3-baud-rate)
-1. [^3 Bus Manager ICP1 Used to Hault Host](#3-bus-manager-icp1-used-to-hault-host)
-1. [^3 FT231X Problem Toggling nDTR and nRTS](#3-ft231x-problem-toggling-ndtr-and-nrts)
-1. [^2 I2C Level Converter](#2-i2c-level-converter)
-1. [^2 Brick Bus Management MCU](#2-brick-bus-management-mcu)
+1. ^5 Names
+1. ^4 Power Chopping
+1. ^3 Baud Rate
+1. ^3 Bus Manager ICP1 Used to Hault Host
+1. ^3 FT231X Problem Toggling nDTR and nRTS
+1. ^2 I2C Level Converter
+1. ^2 Brick Bus Management MCU
+
+
+## ^4 Names
+
+RPUftdi has been renamed RPUusb because I am not using an FTDI chip for this. It was probably a bad idea to use the company name in the board name like that.
+
 
 ## ^4 Power Chopping
 

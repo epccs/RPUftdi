@@ -23,13 +23,13 @@ This is a list of Test preformed on each RPUftdi after assembly.
 
 ## Basics
 
-These tests are for an assembled RPUftdi board 14145^4 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
+These tests are for an assembled RPUftdi board 14145^5 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
 
 **Warning: never use a soldering iron to rework ceramic capacitors due to the thermal shock.**
     
 Items used for test.
 
-![ItemsUsedForTest](./14145,ItemsUsedForTest.jpg "RPUftdi Items Used For Test")
+![ItemsUsedForTest](./14145,ItemsUsedForTest.jpg "RPUusb Items Used For Test")
 
 
 ## Assembly check
@@ -46,9 +46,12 @@ Check continuity between pin and pad by measuring the reverse body diode drop fr
 
 Connect a 5V supply with CC mode set at 30mA to the USB input. Verify that the 5V gets through the fuse and soft start circuit to the +5V pin. Turn off power. 
 
-Connect a 5V supply with CC mode set at 30mA to the +5V (J7 pin 4) and  0V (J7 pin 2). Measure that the the MIC5205 linear regulator has 3.3V (J9 pin 2). Measure the input current of a blank MCU. Turn off power.
+Connect a 5V supply with CC mode set at 30mA to the the USB +5V input. Measure that the the MIC5205 (U2) linear regulator has 3.3V (J2 pin 1). Measure the input current of a blank MCU. Turn off power.
 
 ```
+{   "I_IN_BLANKMCU_mA":[1.44,],
+    "LDO_V":[3.41,] }
+^4
 {   "I_IN_BLANKMCU_mA":[4.5,4.5,4.3,4.4,],
     "LDO_V":[3.3,3.3,3.28,3.28,] }
 ```
@@ -56,7 +59,7 @@ Connect a 5V supply with CC mode set at 30mA to the +5V (J7 pin 4) and  0V (J7 p
 
 ## Set MCU Fuse
 
-Install Git and AVR toolchain on Ubuntu (16.04, on an old computer try https://wiki.ubuntu.com/Lubuntu). 
+Install Git and AVR toolchain on Ubuntu (20.04). 
 
 ```
 sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude

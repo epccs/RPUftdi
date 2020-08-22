@@ -7,15 +7,12 @@ This is a list of Test preformed on each RPUftdi after assembly.
 
 # Table Of Contents:
 
-1. [Basics](#basics)
-2. [Assembly check](#assembly-check)
-3. [IC Solder Test](#ic-solder-test)
-4. [Bias USB 5V and Check LDO Regulators](#bias-usb-5v-and-check-ldo-regulators)
-5. [Set MCU Fuse](#set-mcu-fuse)
-6. [Load CheckDTR Firmware](#load-checkdtr-firmware)
-7. [Check Differential Bias](#check-differential-bias)
-8. [Differential Loopback with TX Driver](#differential-loopback-with-tx-driver)
-9. [USB Power Up](#usb-power-up)
+1. Basics
+1. Assembly check
+1. IC Solder Test
+1. Bias USB 5V and Check LDO Regulators
+1. [USB Power Up](#usb-power-up)
+1. Set Fuse and load Bootloader
 10. [Load i2c-debug into an MCU board](#load-i2c-debug-into-an-mcu-board)
 11. [I2C Slave test](#i2c-slave-test)
 
@@ -57,6 +54,44 @@ Connect a 5V supply with CC mode set at 30mA to the the USB +5V input. Measure t
 ```
 
 
+## USB Power Up
+
+On Linux use the dmesg command to see latest device mesages then plug the USB input to a powered hub that was previously connected and use dmesg to verify that the new USB port shows up.
+
+```
+dmesg
+...
+[11543.622763] usb 2-2: new full-speed USB device number 4 using uhci_hcd
+[11543.806214] usb 2-2: New USB device found, idVendor=10c4, idProduct=ea70, bcdDevice= 1.00
+[11543.806217] usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=5
+[11543.806220] usb 2-2: Product: CP2105 Dual USB to UART Bridge Controller
+[11543.806222] usb 2-2: Manufacturer: Silicon Labs
+[11543.806224] usb 2-2: SerialNumber: 00B3EDE8
+[11543.871127] usbcore: registered new interface driver cp210x
+[11543.872699] usbserial: USB Serial support registered for cp210x
+[11543.873601] cp210x 2-2:1.0: cp210x converter detected
+[11543.881730] usb 2-2: cp210x converter now attached to ttyUSB0
+[11543.882017] cp210x 2-2:1.1: cp210x converter detected
+[11543.889340] usb 2-2: cp210x converter now attached to ttyUSB1
+[38868.129478] usb 2-2: USB disconnect, device number 4
+[38868.129765] cp210x ttyUSB0: cp210x converter now disconnected from ttyUSB0
+[38868.133806] cp210x 2-2:1.0: device disconnected
+[38868.134540] cp210x ttyUSB1: cp210x converter now disconnected from ttyUSB1
+[38868.134679] cp210x 2-2:1.1: device disconnected
+[38890.722140] usb 2-2: new full-speed USB device number 5 using uhci_hcd
+[38890.905536] usb 2-2: New USB device found, idVendor=10c4, idProduct=ea70, bcdDevice= 1.00
+[38890.905539] usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=5
+[38890.905542] usb 2-2: Product: CP2105 Dual USB to UART Bridge Controller
+[38890.905544] usb 2-2: Manufacturer: Silicon Labs
+[38890.905546] usb 2-2: SerialNumber: 00B3EDE8
+[38890.911642] cp210x 2-2:1.0: cp210x converter detected
+[38890.918612] usb 2-2: cp210x converter now attached to ttyUSB0
+[38890.920600] cp210x 2-2:1.1: cp210x converter detected
+[38890.927608] usb 2-2: cp210x converter now attached to ttyUSB1
+...
+```
+
+
 ## Set MCU Fuse
 
 Install Git and AVR toolchain on Ubuntu (20.04). 
@@ -69,99 +104,38 @@ Clone the RPUftdi repository.
 
 ```
 cd ~
-git clone https://github.com/epccs/RPUftdi
-cd RPUftdi/Bootload
+git clone https://github.com/epccs/RPUusb
+cd RPUusb/Bootload
 ```
 
-Connect a 5V supply with CC mode set at 30mA to the +5V (J7 pin 4) and  0V (J7 pin 2). Connect the ICSP tool (J9). The MCU needs its fuses set, so run the Makefile rule to do that. 
+Connect a USB host to supply power. Connect the ICSP tool (J3). The MCU needs its fuses set, so run the Makefile rule to do that. 
 
 ```
 make fuse
 ```
 
-Note: There is not a bootloader, it just sets fuses.
+Next load the bootloader
+
+```
+# a copy of the hex file is in the repo
+[make all]
+make isp
+```
+
 
 Disconnect the ICSP tool and measure the input current for 12Mhz crystal at 3.3V. It takes a long time to settel.
 
 ```
+{   "I_IN_MCU_12MHZ_LP-CRYSTAL_mA":[tbd,]}
+^4
 {   "I_IN_MCU_12MHZ_LP-CRYSTAL_mA":[7.3,7.3,7.2,7.1,7.1,7.2,7.1,]}
-# old values for referance only
+^3
 {   "I_IN_MCU_8MHZ_INTRN_mA":[6.3,6.2,6.0,6.1]}
 ```
 
 
-## Load CheckDTR Firmware
-
-Plug a header (or jumper) onto the +5V pin so that IOREF is jumpered to +5V. Connect TX pin to IOREF to pull it up (the MCU normaly does this). Plug a CAT5 RJ45 stub with 100 Ohm RX, TX and DTR pair terminations. Connect a 5V supply with CC mode set at 50mA to the +5V that was jumpered to IOREF (J7 pin 4) and  0V (J7 pin 2). Connect the ICSP tool (J9).
-
-Use the command line to select the CheckDTR source working directory. Run the makefile rule used to load CheckDTR firmware that verifies DTR control is working:
-
-```
-cd ~RPUftdi/CheckDTR
-make isp
-```
-
-The program loops through the test. It blinks the red LED to show which test number is setup. If it keeps repeating a test then that test has failed.
-
-As the firmware loops the input current can be measured, it should have two distinct levels, one when the DTR pair is driven low and one when the DTR pair is not driven. The blinking LED leaves the DMM unsettled. Measure that FTDI_3V3 has 3.3V (TP3).
-
-```
-{   "DTR_HLF_LD_mA":[36.8,34.1,35.3,34.9,35.0,],
-    "DTR_NO_LD_mA":[13.7,11.5,12.1,11.9,12.0,],
-    "FTDI_3V3_V":[3.275,3.305,3.311,3.265,] }
-```
 
 
-##  Check Differential Bias
-
-Plug a header (or jumper) onto the +5V pin so that IOREF is jumpered to +5V. Connect TX pin to 0V to pull it down to simulate the MCU sending data. The CheckDTR firmware will set TX_DE and RX_DE high. Connect a 5V supply with CC mode set at 100mA to the +5V that was jumpered to IOREF (J7 pin 4) and 0V (J7 pin 2). 
-
-Check  that the input current is cycling between 56mA and 33mA. At 56mA the TX driver is driving the TX pair with half load and DTR driver is driving the DTR pair with a half load, while ony the TX pair is driven at 33mA. 
-
-```
-{   "DTR_TX_HLF_LD_mA":[59.4,56.5,57.7,57.2,57.1,],
-    "TX_HLF_LD_mA":[36.5,33.8,35.0,34.2,34.1] }
-```
-
-
-## Differential Loopback with TX Driver
-
-
-Same as Differential Bias test with a plug in a RJ45 loopback connector to connect the TX differential pair to the RX differential pair and the input current. The TX driver is now driving a differential pair with 50 Ohms on it, which is the normal load. Verify that RX has 0V on it now.
-
-NOTE: the RX Driver is directly connected by FTDI_TX to the FTDI chip pin, if the FTDI_TX node were to be pulled down to test the RX driver the FTDI chip would not stop trying to pull it up and be damaged.
-
-```
-{   "DTR_HLF_LD_TX_FL_LD_mA":[76.5,73.8,75.1,74.5,74.2,],
-    "TX_FL_LD_mA":[53.0,51.0,52.0,51.5,51.2,] }
-```
-
-Turn off power. 
-
-
-## USB Power Up
-
-Plug a header (or jumper) onto the +5V pin so that IOREF is jumpered to +5V. Plug in a jumper from TX to RX pins, which normaly go to the MCU board.
-
-On Linux use the dmesg command to see latest device mesages then plug the USB input to a powered hub that was previously connected and use dmesg to verify that the new USB port shows up. Then use picocom to connect to it.
-
-```
-rsutherland@conversion:~/RPUftdi/CheckDTR$ dmesg
-...
-[20662.404039] usb 1-4.3: new full-speed USB device number 6 using ehci-pci
-[20662.502768] usb 1-4.3: New USB device found, idVendor=0403, idProduct=6015
-[20662.502781] usb 1-4.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[20662.502792] usb 1-4.3: Product: FT231X USB UART
-[20662.502801] usb 1-4.3: Manufacturer: FTDI
-[20662.502812] usb 1-4.3: SerialNumber: DA01LX0U
-[20662.512277] ftdi_sio 1-4.3:1.0: FTDI USB Serial Device converter detected
-[20662.512328] usb 1-4.3: Detected FT-X
-[20662.512686] usb 1-4.3: FTDI USB Serial Device converter now attached to ttyUSB0
-...
-rsutherland@conversion:~/RPUftdi/CheckDTR$ picocom -b 38400 /dev/ttyUSB0
-```
-
-Verify each character echo's. Turn off power (unplug USB).
 
 
 ## Load i2c-debug into an MCU board

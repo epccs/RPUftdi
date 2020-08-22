@@ -59,8 +59,8 @@ typedef enum MCU_IO_enum {
     MCU_IO_MOSI,  // PB3 goes to where R-Pi MOSI (SPI0) would be
     MCU_IO_MISO, // PB4 goes to where R-Pi MISO (SPI0) would be
     MCU_IO_SCK,   // PB5 goes to where R-Pi SCK (SPI0) would be
-    MCU_IO_USB_UART1_RX1,   // PD0 goes to the secondary UART on CP2105.
-    MCU_IO_USB_UART1_TX1,   // PD1 goes to the secondary UART on CP2105.
+    MCU_IO_USB_UART1_RX,   // PD0 goes to the secondary UART on CP2105.
+    MCU_IO_USB_UART1_TX,   // PD1 goes to the secondary UART on CP2105.
     MCU_IO_SHUTDOWN, // PD2 goes to where R-Pi BMC6 would be, which I use for a shutdown signal
     MCU_IO_BMC44, // PD3 goes to where R-Pi BMC44 would be
     MCU_IO_BMC27, // PD4 goes to where R-Pi BMC27 would be

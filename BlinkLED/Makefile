@@ -1,25 +1,36 @@
-# BlinkLED Makefile is for learning
-#
-# to see the implicit rules which automagicly turn blinkLED.c into blinkLED.o run
-# make -p
+# build application from source
+# when files for application change the binary image needs updated
+# https://www.gnu.org/software/make/manual/make.html
 TARGET = blinkLED
 LIBDIR = ../lib
 OBJECTS = main.o \
-	$(LIBDIR)/timers.o
+	$(LIBDIR)/twi1_bsd.o \
+	$(LIBDIR)/uart0_bsd.o \
+	$(LIBDIR)/timers_bsd.o 
 
 ## Chip and project-specific global definitions
-MCU   =  atmega328p
+MCU   =  atmega328pb
 F_CPU = 12000000UL  
-BAUD  =  250000UL
-CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
+CPPFLAGS = -DF_CPU=$(F_CPU) -I. 
+
+LOCK_FUSE = 0xEF
 
 ## Cross-compilation
 CC = avr-gcc
 OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
 SIZE = avr-size
 
-## Uno with Arduino as ISP sketch shows as ttyACMx
-ISP_PORT = /dev/ttyACM0
+# FTDI's USB to serial bridge shows as /dev/ttyUSB0, 
+# Uno's serial bridge (an ATmega16U2) shows as /dev/ttyACM0  (a modem,?)
+# Pi Zero on chip hardware serial shows as /dev/ttyAMA0 (hardware UART on a Linux system)
+detect_PORT := $(shell sh -c 'ls /dev/ttyUSB1 2>/dev/null || echo not')
+ifeq ($(detect_PORT),/dev/ttyUSB1)
+	BOOTLOAD_PORT = /dev/ttyUSB1
+else
+	@echo "RPUusb bootload port not found"
+	BOOTLOAD_PORT = /dev/null
+endif
 
 ## Compiler/linker options
 CFLAGS = -Os -g -std=gnu99 -Wall
@@ -27,32 +38,39 @@ CFLAGS = -Os -g -std=gnu99 -Wall
 # CFLAGS += -fpack-struct -fshort-enums 
 CFLAGS += -ffunction-sections -fdata-sections 
 
-TARGET_ARCH = -mmcu=$(MCU)
+TARGET_ARCH = -mmcu=$(MCU) -B $(LIBDIR)/ATmega_DFP/gcc/dev/atmega328pb/ -I $(LIBDIR)/ATmega_DFP/include/
+## if atmega324pb is in avr-gcc mainline use
+##TARGET_ARCH = -mmcu=$(MCU)
 
 LDFLAGS = -Wl,-Map,$(TARGET).map 
 LDFLAGS += -Wl,--gc-sections 
 
-all: $(TARGET).hex
+.PHONY: help
+
+# some help for the make impaired
+# https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+all: $(TARGET).hex $(TARGET).lst ## build the image and its related files
 
 $(TARGET): $(TARGET).hex
 
 $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
-	rm -f $(TARGET).elf
 
-## stk500v1 is for Arduino as ISP (e.g. it is an example in the Arduino.cc IDE 1.6.7+)
-## to reduce dupliction I set the fuse from ../Bootloader
-
-## 328p can lock the bootloader section, which is a good idea even if it is not used
-isp: $(TARGET).hex
-	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U flash:w:$(TARGET).hex -U lock:w:0x2f:m
-
+# optiboot erases flash without being told (e.g. -e )
+bootload: ## upload to optiboot 
+	avrdude -v -p $(MCU) -C +$(LIBDIR)/avrdude/328pb.conf -c arduino -P $(BOOTLOAD_PORT) -b 38400 -U flash:w:$(TARGET).hex
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
-	$(SIZE) -C --mcu=$(MCU) $@
+	@echo binutils-avr do not have 328pb, but it is sized like a 328p
+	$(SIZE) -C --mcu=atmega328p $@
 	rm -f $(TARGET).o $(OBJECTS)
 
-clean: 
-	rm -f $(TARGET).hex $(TARGET).map
+clean: ## remove the image and its related files
+	rm -f $(TARGET).hex $(TARGET).map $(TARGET).elf $(TARGET).lst
  
+%.lst: %.elf
+	$(OBJDUMP) -h -S $< > $@

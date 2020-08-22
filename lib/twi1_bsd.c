@@ -340,8 +340,8 @@ void twi1_init(uint32_t bitrate, TWI1_PINS_t pull_up)
         TWCR1 &= ~((1<<TWEN) | (1<<TWIE) | (1<<TWEA));
 
         // deactivate internal pullups for twi.
-        ioWrite(MCU_IO_SCL1, LOGIC_LEVEL_LOW); // PORTE &= ~(1 << PORTE6) disable the pull-up
-        ioWrite(MCU_IO_SDA1, LOGIC_LEVEL_LOW); // PORTE &= ~(1 << PORTE5)
+        ioWrite(MCU_IO_ID_SC, LOGIC_LEVEL_LOW); // PORTE &= ~(1 << PORTE6) disable the pull-up
+        ioWrite(MCU_IO_ID_SD, LOGIC_LEVEL_LOW); // PORTE &= ~(1 << PORTE5)
     }
     else
     {
@@ -352,14 +352,14 @@ void twi1_init(uint32_t bitrate, TWI1_PINS_t pull_up)
         twi1_MastSlav_RxTx_state = TWI_STATE_READY;
         twi1_protocall = TWI1_PROTOCALL_STOP & ~TWI1_PROTOCALL_REPEATEDSTART;
 
-        ioDir(MCU_IO_SCL1, DIRECTION_INPUT); // DDRE &= ~(1 << DDE6)
-        ioDir(MCU_IO_SDA1, DIRECTION_INPUT); // DDRE &= ~(1 << DDE5)
+        ioDir(MCU_IO_ID_SC, DIRECTION_INPUT); // DDRE &= ~(1 << DDE6)
+        ioDir(MCU_IO_ID_SD, DIRECTION_INPUT); // DDRE &= ~(1 << DDE5)
 
         // weak pullup pull-up.
         if (pull_up == TWI1_PINS_PULLUP)
         {
-            ioWrite(MCU_IO_SCL1, LOGIC_LEVEL_HIGH); // PORTE |= (1 << PORTE6)
-            ioWrite(MCU_IO_SDA1, LOGIC_LEVEL_HIGH); // PORTE |= (1 << PORTE5)
+            ioWrite(MCU_IO_ID_SC, LOGIC_LEVEL_HIGH); // PORTE |= (1 << PORTE6)
+            ioWrite(MCU_IO_ID_SD, LOGIC_LEVEL_HIGH); // PORTE |= (1 << PORTE5)
         }
 
         // initialize TWPS[0:1]=0 for a prescaler = 1

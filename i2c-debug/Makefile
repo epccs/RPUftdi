@@ -1,15 +1,24 @@
 # build application from source
 # when files for application change the binary image needs updated
 # https://www.gnu.org/software/make/manual/make.html
-TARGET = blinkLED
+TARGET = I2c-debug
 LIBDIR = ../lib
 OBJECTS = main.o \
-	$(LIBDIR)/twi1_bsd.o \
+	i2c1-monitor.o \
+	i2c1-scan.o \
+	i2c1-cmd.o \
+	i2c0-monitor.o \
+	i2c0-scan.o \
+	i2c0-cmd.o \
+	id.o \
+	$(LIBDIR)/timers_bsd.o \
 	$(LIBDIR)/uart0_bsd.o \
-	$(LIBDIR)/timers_bsd.o
+	$(LIBDIR)/twi0_bsd.o \
+	$(LIBDIR)/twi1_bsd.o \
+	$(LIBDIR)/parse.o
 
 ## Chip and project-specific global definitions
-MCU = atmega328pb
+MCU   =  atmega328pb
 F_CPU = 12000000UL
 CPPFLAGS = -DF_CPU=$(F_CPU) -I.
 
@@ -35,14 +44,14 @@ endif
 CFLAGS = -Os -g -std=gnu99 -Wall
 # CFLAGS += -funsigned-char -funsigned-bitfields 
 # CFLAGS += -fpack-struct -fshort-enums 
-CFLAGS += -ffunction-sections -fdata-sections
+CFLAGS += -ffunction-sections -fdata-sections 
 
 TARGET_ARCH = -mmcu=$(MCU) -B $(LIBDIR)/ATmega_DFP/gcc/dev/atmega328pb/ -I $(LIBDIR)/ATmega_DFP/include/
 ## if atmega324pb is in avr-gcc mainline use
 ##TARGET_ARCH = -mmcu=$(MCU)
 
-LDFLAGS = -Wl,-Map,$(TARGET).map
-LDFLAGS += -Wl,--gc-sections
+LDFLAGS = -Wl,-Map,$(TARGET).map 
+LDFLAGS += -Wl,--gc-sections 
 
 .PHONY: help
 
@@ -67,7 +76,7 @@ endif
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
-	@echo binutils-avr do not have 328pb, but it is sized like a 328p
+	@echo binutils-avr does not have 328pb, but it is sized like a 328p
 	$(SIZE) -C --mcu=atmega328p $@
 	rm -f $(TARGET).o $(OBJECTS)
 

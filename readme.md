@@ -10,11 +10,11 @@ Alow a desktop or other host with USB to interface with [Gravimetric] that have 
 
 ## Status
 
-[Available](https://rpubus.org/Order_Form.html)
+This board has a known problem with managers that lack power domains that allow one side to power down, that is to say if it has power and the application does not then the manager on the application board will be damaged. It is my hope that I can figure out how to use one of the new AVR-DB chips as a manager to fix this problem.
 
 ![Status](./Hardware/status_icon.png "Status")
 
-This is programmed with an in-circuit serial programming tool that is able to handle the 3.3V ATmega328pb target. I use an Arduino Uno with the [ArduinoISP] sketch and an SPI level shifter. A Raspberry Pi also works with the [ICSP].
+This is programmed with an in-circuit serial programming tool that is able to handle the 3.3V ATmega328pb target. I use an Arduino Uno with the [ArduinoISP] sketch and an SPI level shifter.
 
 [ICSP]: https://github.com/epccs/Driver/tree/master/ICSP
 

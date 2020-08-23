@@ -4,6 +4,7 @@ Some lessons I learned doing RPUusb.
 
 # Table Of Contents:
 
+1. ^5 Smoke
 1. ^5 Names
 1. ^4 Power Chopping
 1. ^3 Baud Rate
@@ -13,7 +14,18 @@ Some lessons I learned doing RPUusb.
 1. ^2 Brick Bus Management MCU
 
 
-## ^4 Names
+## ^5 Smoke
+
+Do not power the RPUusb board (e.g., so remove the USB plug before) first. Power the application (Gravimetric) board and then plug in the USB. This problem is going to take some time to understand. First, I have to figure out which part(s) let out smoke; it is not apparent.
+
+Found a damaged place, it is the manager (m328pb on Gravimetric^2) over the power pin four, which has a bump above it where the smoke was let out. I have found a few paths (TWI1 which is used for SMBus) where the current from RPUusb could flow into an unpowered manager. I suspect that when I had the USB powered and the Gravimetric unpowered, it damaged the manager, and when I powered the Gravimetric, the manager let out its smoke since it was degraded. I think this could happen without severely damaging other parts, so I will try to replace the Gravimetric manager.
+
+This is probably when a second power domain on an MCU makes  sense. The new AVR-DB series offers it but that will need to be an update, also I think it will need to be the manager on Gravimetric that gets the update.
+
+Replaceing the manager on Gravimetric did fix the problem so if a AVR-DB has two I2C ports on sepreate power domains than I may be fix this. An externaly powered R-Pi would have the same problem I suspect, so this needs fixed (but not on the RPUusb board, it needs fixed on the application board.)
+
+
+## ^5 Names
 
 RPUftdi has been renamed RPUusb because I am not using an FTDI chip for this. It was probably a bad idea to use the company name in the board name like that.
 

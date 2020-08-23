@@ -1,0 +1,254 @@
+# I2C-Debug 
+
+## Overview
+
+2-wire Serial Interface (TWI, a.k.a. I2C) uses pins with SDA and SCL functions. 
+
+The peripheral control software provides interrupt-driven asynchronous I2C functions that can operate without blocking. It can also work with an interleaving receive buffer for SMBus block transactions that to mitigate problems involving clock stretching (e.g., for R-Pi Zero). This application uses both TWI0 and TWI1 hardware. TWI0 is connected to where the R-Pi SMBus would operate, and TWI1 is where the Identification interface goes.
+
+
+## Firmware Upload 
+
+
+Use the secondary serial port connection (see BOOTLOAD_PORT in Makefile) to reset the MCU and execute optiboot so that the 'make bootload' rule can upload a new binary image in the application area of flash memory. The bootloader runs at 38.4kbps.
+
+``` 
+sudo apt-get install make git picocom gcc-avr binutils-avr gdb-avr avr-libc avrdude
+git clone https://github.com/epccs/Gravimetric/
+cd /Gravimetric/Applications/i2c-debug
+make all
+...
+avr-objcopy -j .text -j .data -O ihex i2c-debug.elf i2c-debug.hex
+avr-objdump -h -S i2c-debug.elf > i2c-debug.lst
+make bootload
+...
+avrdude done.  Thank you.
+``` 
+
+Now connect with picocom (or ilk).
+
+``` 
+#exit is C-a, C-x
+picocom -b 38400 /dev/ttyUSB1
+...
+/0/iscan?
+``` 
+
+
+# Commands
+
+Commands are interactive over the serial interface at 38400 baud rate. The echo will start after the second character of a new line. 
+
+
+## /\[rpu_address\]/\[command \[arg\]\]
+
+rpu_address is taken from the manager (e.g. get_Rpu_address() which is included form ../lib/rpu_mgr.h). The value of rpu_address is used as a character in a string, which means don't use a null value (C strings are null terminated) as an adddress. The ASCII value for '1' (0x31) is easy and looks nice, though I fear it will cause some confusion when it is discovered that the actual address value is 49.
+
+Commands and their arguments follow.
+
+## /0/id? \[name|desc|avr-gcc\]
+
+identify 
+
+``` 
+/1/id?
+{"id":{"name":"I2C1debug^2","desc":"Gravimetric (17341^1) Board /w ATmega324pb","avr-gcc":"5.4.0"}}
+```
+
+## /0/i1scan?
+
+Scan of I2C bus shows all 7 bit devices found (nothing is on the bus).
+
+``` 
+/1/i1scan?
+{"scan":[]}
+```
+
+Note: the address is right-shifted so that it does not include the Read/Write bit. 
+
+
+## /0/i1addr 0..127
+
+Set an I2C address for the masster to access. 
+
+``` 
+/1/i1addr 41
+{"master_address":"0x29"}
+```
+
+Note: Set it with the decimal value, it will return the hex value. The address is used to write or read and will clear the transmit Buffer.
+
+
+## /0/i1buff 0..255\[,0..255\[,0..255\[,0..255\[,0..255\]\]\]\]
+
+Add up to five bytes to I2C transmit buffer. JSON reply is the full buffer. 
+
+``` 
+/1/i1buff 2,0
+{"txBuffer[2]":[{"data":"0x2"},{"data":"0x0"}]}
+``` 
+
+
+## /0/i1buff?
+
+Show transmit buffer data that will be given to I2C master.
+
+``` 
+/1/i1buff?
+{"txBuffer[2]":[{"data":"0x2"},{"data":"0x0"}]}
+``` 
+
+## /0/i1write
+
+Attempt to become master and write the txBuffer bytes to I2C address. The txBuffer will clear if write was a success.
+
+``` 
+/1/i1addr 41
+{"master_address":"0x29"}
+/1/i1buff?
+{"txBuffer[0]":[]}
+/1/i1buff 2,0
+{"txBuffer[2]":[{"data":"0x2"},{"data":"0x0"}]}
+/1/i1write
+{"error":"wrt_addr_nack"}
+``` 
+
+Welp what did you expect? Nothing is on the bus.
+
+
+## /0/i1read? \[1..32\]
+
+If txBuffer is empty, attempt to become master write zero bytes to chekc for NACK and then obtain readings into rxBuffer.
+
+``` 
+/1/i1addr 41
+{"master_address":"0x29"}
+/1/i1buff?
+{"txBuffer[0]":[]}
+/1/i1buff 2,0
+{"txBuffer[2]":[{"data":"0x2"},{"data":"0x0"}]}
+/1/i1write
+{"error":"wrt_addr_nack"}
+/1/i1buff?
+{"txBuffer[2]":[{"data":"0x2"},{"data":"0x0"}]}
+/1/i1addr 41
+{"master_address":"0x29"}
+/1/i1buff?
+{"txBuffer[0]":[]}
+/1/i1read? 2
+{"error":"rd_addr_nack"}
+``` 
+
+If txBuffer has values, attempt to become master and write the byte(s) in buffer (e.g., a command byte) to I2C address without a stop condition. The txBuffer will clear if write was a success. Then send a repeated Start condition, followed by address and obtain readings into rxBuffer.
+
+``` 
+/1/i1addr 41
+{"master_address":"0x29"}
+/1/i1buff 2,0
+{"txBuffer[2]":[{"data":"0x2"},{"data":"0x0"}]}
+/1/i1read? 2
+{"error":"wrt_addr_nack"}
+``` 
+
+This way of doing the repeated start allows testing SMBus block commands, which need a command byte sent before a repeated start and finally reading the data block.
+
+
+## /0/i1mon? \[7..119\]
+
+Monitor a slave address. The receive callback (from master write) fills a print buffer and a local buffer for an echo of the data back during a transmit callback (to master read). Loading the print buffer will be skipped when the UART is writing.
+
+``` 
+/1/i1mon? 28
+{"monitor_0x1C":[{"data":"0x2"},{"data":"0x0"}]}
+{"monitor_0x1C":[{"data":"0x0"},{"data":"0x0"}]}
+``` 
+
+The monitor events are from another board with i2c0-debug where I used a master to write to this slave.
+
+```
+/0/iscan?
+{"scan":[{"addr":"0x1C"},{"addr":"0x29"}]}
+/0/iaddr 28
+{"address":"0x1C"}
+/0/ibuff 2,0
+{"txBuffer[2]":[{"data":"0x2"},{"data":"0x0"}]}
+/0/iread? 2
+{"rxBuffer":[{"data":"0x2"},{"data":"0x0"}]}
+/0/ibuff 0,0
+{"txBuffer[2]":[{"data":"0x0"},{"data":"0x0"}]}
+/0/iread? 2
+{"rxBuffer":[{"data":"0x0"},{"data":"0x0"}]}
+``` 
+
+## [i2c0-debug](../i2c0-debug#commands)
+
+i2c0-debug is included with this build
+
+
+# PCA9554 Example
+
+Load the PCA9554 configuration register 3 (DDR) with zero to set the port as output. Then alternate register 1 (the output port) with 85 and 170 to toggle its output pins. 
+
+``` 
+/1/iaddr 56
+{"address":"0x38"}
+/1/ibuff 3,0
+{"txBuffer":["data":"0x3","data":"0x0"]}
+/1/iwrite
+{"returnCode":"success"}
+/1/ibuff 1,170
+{"txBuffer":[{"data":"0x1"},{"data":"0xAA"}]}
+/1/iwrite
+{"returnCode":"success"}
+/1/ibuff 1,85
+{"txBuffer":[{"data":"0x1"},{"data":"0x55"}]}
+/1/iwrite
+{"returnCode":"success"}
+``` 
+
+# HTU21D Example 
+
+``` 
+/1/scan?
+{"scan":[{"addr":"0x29"},{"addr":"0x40"}]}
+``` 
+
+Command 0xE3 measures temperature, the clock is streached until data is ready.
+
+``` 
+/1/iaddr 64
+{"address":"0x40"}
+/1/ibuff 227
+{"txBuffer":["data":"0xE3"]}
+/1/iread? 3
+{"rxBuffer":[{"data":"0x6A"},{"data":"0xC"},{"data":"0xC6"}]}
+``` 
+
+The first two bytes are the temperature data. The last two bits of LSB are status (ignore or mask them off). Some Python gives the result in deg C.
+
+``` 
+Stmp = 0x6A0C
+Temp = -46.85 + 175.72 * Stmp / (2**16)
+Temp
+25.9
+``` 
+
+Command 0xE5 measures humidity, again the clock is streached until data is ready.
+
+``` 
+/1/iaddr 64
+{"address":"0x40"}
+/1/ibuff 229
+{"txBuffer":["data":"0xE5"]}
+/1/read? 3
+{"rxBuffer":[{"data":"0x65"},{"data":"0x96"},{"data":"0xBC"}]}
+``` 
+
+The first two bytes are the temperature data. The last two bits of LSB are status (ignore or mask them off). Some Python gives the result in deg C.
+
+``` 
+Stmp = 0x6596 & 0xFFFC
+RH = -6 + 125 * Stmp / (2**16)
+RH
+43.6
+``` 

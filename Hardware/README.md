@@ -32,10 +32,11 @@ USB interface that plugs in place of an R-Pi. It plugs into an R-Pi header (e.g.
 ![Status](./status_icon.png "RPUusb Status")
 
 ```
-        ^5  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, 
-            WIP: Testing,
-            Todo: Evaluation.
+        ^5  Done: Design (# = done), Layout, BOM, Review*, Order Boards, Assembly, Testing,
+            WIP: Evaluation.
+            Todo: 
             *during review the Design may change without changing the revision.
+            High risk of damage to manager on application board, if manager has dual power domains that may fix
             # remove arduino headers
             # add header with 40 pin R-Pi pinout
             # swap MCU to ATmega328pb

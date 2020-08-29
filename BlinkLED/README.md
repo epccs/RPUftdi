@@ -12,8 +12,8 @@ Use the secondary serial port connection (see BOOTLOAD_PORT in Makefile) to rese
 
 ``` 
 sudo apt-get install make git picocom gcc-avr binutils-avr gdb-avr avr-libc avrdude
-git clone https://github.com/epccs/Gravimetric/
-cd /Gravimetric/Applications/BlinkLED
+git clone https://github.com/epccs/RPUusb/
+cd /RPUusb/Applications/BlinkLED
 make all
 ...
 avr-objcopy -j .text -j .data -O ihex blinkLED.elf blinkLED.hex

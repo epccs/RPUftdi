@@ -9,13 +9,12 @@ The peripheral control software provides interrupt-driven asynchronous I2C funct
 
 ## Firmware Upload 
 
-
 Use the secondary serial port connection (see BOOTLOAD_PORT in Makefile) to reset the MCU and execute optiboot so that the 'make bootload' rule can upload a new binary image in the application area of flash memory. The bootloader runs at 38.4kbps.
 
 ``` 
 sudo apt-get install make git picocom gcc-avr binutils-avr gdb-avr avr-libc avrdude
-git clone https://github.com/epccs/Gravimetric/
-cd /Gravimetric/Applications/i2c-debug
+git clone https://github.com/epccs/RPUusb/
+cd /RPUusb/Applications/i2c-debug
 make all
 ...
 avr-objcopy -j .text -j .data -O ihex i2c-debug.elf i2c-debug.hex

@@ -47,28 +47,28 @@ typedef enum LOGIC_LEVEL_enum {
 typedef enum MCU_IO_enum {
     MCU_IO_MISO1,  // PC0 goes to where R-Pi MISO1 (SPI1) would be
     MCU_IO_SCK1, // PC1 goes to where R-Pi SCK1 (SPI1) would be
-    MCU_IO_BMC23, // PC2 goes to where R-Pi BMC23 would be
-    MCU_IO_BMC24, // PC3 goes to where R-Pi BMC24 would be
+    MCU_IO_BCM23, // PC2 goes to where R-Pi BCM23 would be
+    MCU_IO_BCM24, // PC3 goes to where R-Pi BCM24 would be
     MCU_IO_SDA, // PC4 goes to where R-Pi SDA (I2C0) would be
     MCU_IO_SCL, // PC5 goes to where R-Pi SCL (I2C0) would be
     MCU_IO_nCE10, // PC5 goes to where R-Pi nCE10 (SPI1) would be
     MCU_IO_MOSI1, // PE3 goes to where R-Pi MOSI1 (SPI1) would be
-    MCU_IO_BMC5, // PB0 goes to where R-Pi BMC5 would be
-    MCU_IO_BMC26, // PB1 goes to where R-Pi BMC26 would be
+    MCU_IO_BCM5, // PB0 goes to where R-Pi BCM5 would be
+    MCU_IO_BCM26, // PB1 goes to where R-Pi BCM26 would be
     MCU_IO_nCE00, // PB2 goes to where R-Pi nCE00 (SPI0) would be
     MCU_IO_MOSI,  // PB3 goes to where R-Pi MOSI (SPI0) would be
     MCU_IO_MISO, // PB4 goes to where R-Pi MISO (SPI0) would be
     MCU_IO_SCK,   // PB5 goes to where R-Pi SCK (SPI0) would be
     MCU_IO_USB_UART1_RX,   // PD0 goes to the secondary UART on CP2105.
     MCU_IO_USB_UART1_TX,   // PD1 goes to the secondary UART on CP2105.
-    MCU_IO_SHUTDOWN, // PD2 goes to where R-Pi BMC6 would be, which I use for a shutdown signal
-    MCU_IO_BMC44, // PD3 goes to where R-Pi BMC44 would be
-    MCU_IO_BMC27, // PD4 goes to where R-Pi BMC27 would be
-    MCU_IO_BMC13_PWM1, // PD5 goes to where R-Pi BMC13 (PWM1) would be
-    MCU_IO_BMC12_PWM0, // PD6 goes to where R-Pi BMC12 (PWM0) would be
-    MCU_IO_BMC22, // PD7 goes to where R-Pi BMC22 would be
-    MCU_IO_ID_SD, // PE0 goes to where R-Pi BMC0 (ID_SD) would be
-    MCU_IO_ID_SC, // PE1 goes to where R-Pi BMC1 (ID_SC) would be
+    MCU_IO_SHUTDOWN, // PD2 goes to where R-Pi BCM6 would be, which I use for a shutdown signal
+    MCU_IO_BCM44, // PD3 goes to where R-Pi BCM44 would be
+    MCU_IO_BCM27, // PD4 goes to where R-Pi BCM27 would be
+    MCU_IO_BCM13_PWM1, // PD5 goes to where R-Pi BCM13 (PWM1) would be
+    MCU_IO_BCM12_PWM0, // PD6 goes to where R-Pi BCM12 (PWM0) would be
+    MCU_IO_BCM22, // PD7 goes to where R-Pi BCM22 would be
+    MCU_IO_ID_SD, // PE0 goes to where R-Pi BCM0 (ID_SD) would be
+    MCU_IO_ID_SC, // PE1 goes to where R-Pi BCM1 (ID_SC) would be
     MCU_IO_END // enum starts at zero, this is one past end of list for use as array size
 } MCU_IO_t;
 
@@ -88,14 +88,14 @@ const static struct IO_Map ioMap[MCU_IO_END] =
 {
     [MCU_IO_MISO1] = { .ddr=&DDRC, .in=&PINC, .port=&PORTC, .mask= 1<<PC0 },
     [MCU_IO_SCK1] = { .ddr=&DDRC, .in=&PINC, .port=&PORTC, .mask= 1<<PC1 },
-    [MCU_IO_BMC23] = { .ddr=&DDRC, .in=&PINC, .port=&PORTC, .mask= 1<<PC2 },
-    [MCU_IO_BMC24] = { .ddr=&DDRC, .in=&PINC, .port=&PORTC, .mask= 1<<PC3 },
+    [MCU_IO_BCM23] = { .ddr=&DDRC, .in=&PINC, .port=&PORTC, .mask= 1<<PC2 },
+    [MCU_IO_BCM24] = { .ddr=&DDRC, .in=&PINC, .port=&PORTC, .mask= 1<<PC3 },
     [MCU_IO_SDA] = { .ddr=&DDRC, .in=&PINC, .port=&PORTC, .mask= 1<<PC4 },
     [MCU_IO_SCL] = { .ddr=&DDRC, .in=&PINC, .port=&PORTC, .mask= 1<<PC5 },
     [MCU_IO_nCE10] = { .ddr=&DDRE, .in=&PINE, .port=&PORTE, .mask= 1<<PE2 },
     [MCU_IO_MOSI1] = { .ddr=&DDRE, .in=&PINE, .port=&PORTE, .mask= 1<<PE3 },
-    [MCU_IO_BMC5] = { .ddr=&DDRB, .in=&PINB, .port=&PORTB, .mask= 1<<PB0 }, 
-    [MCU_IO_BMC26] = { .ddr=&DDRB, .in=&PINB, .port=&PORTB, .mask= 1<<PB1 },
+    [MCU_IO_BCM5] = { .ddr=&DDRB, .in=&PINB, .port=&PORTB, .mask= 1<<PB0 }, 
+    [MCU_IO_BCM26] = { .ddr=&DDRB, .in=&PINB, .port=&PORTB, .mask= 1<<PB1 },
     [MCU_IO_nCE00] = { .ddr=&DDRB, .in=&PINB, .port=&PORTB, .mask= 1<<PB2 },
     [MCU_IO_MOSI] = { .ddr=&DDRB, .in=&PINB, .port=&PORTB, .mask= 1<<PB3 },
     [MCU_IO_MISO] = { .ddr=&DDRB, .in=&PINB, .port=&PORTB, .mask= 1<<PB4 },
@@ -103,11 +103,11 @@ const static struct IO_Map ioMap[MCU_IO_END] =
     [MCU_IO_USB_UART1_RX] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD0 },
     [MCU_IO_USB_UART1_TX] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD1 },
     [MCU_IO_SHUTDOWN] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD2 },
-    [MCU_IO_BMC44] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD3 },
-    [MCU_IO_BMC27] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD4 },
-    [MCU_IO_BMC13_PWM1] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD5 },
-    [MCU_IO_BMC12_PWM0] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD6 },
-    [MCU_IO_BMC22] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD7 },
+    [MCU_IO_BCM44] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD3 },
+    [MCU_IO_BCM27] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD4 },
+    [MCU_IO_BCM13_PWM1] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD5 },
+    [MCU_IO_BCM12_PWM0] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD6 },
+    [MCU_IO_BCM22] = { .ddr=&DDRD, .in=&PIND, .port=&PORTD, .mask= 1<<PD7 },
     [MCU_IO_ID_SD] = { .ddr=&DDRE, .in=&PINE, .port=&PORTE, .mask= 1<<PE0 },
     [MCU_IO_ID_SC] = { .ddr=&DDRE, .in=&PINE, .port=&PORTE, .mask= 1<<PE1 }
 };

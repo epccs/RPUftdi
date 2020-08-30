@@ -112,7 +112,7 @@ const static struct IO_Map ioMap[MCU_IO_END] =
     [MCU_IO_ID_SC] = { .ddr=&DDRE, .in=&PINE, .port=&PORTE, .mask= 1<<PE1 }
 };
 #else
-#   error this is for an mega328pb manager on a PCB board, see https://github.com/epccs/Gravimetric
+#   error this is for an mega328pb on a PCB board with the pins run to where an R-Pi would go, see https://github.com/epccs/RPUusb
 #endif
 
 // read value from IO input bit and return its bool value

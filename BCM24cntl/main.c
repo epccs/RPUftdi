@@ -22,6 +22,7 @@ https://github.com/epccs/PiUpdi
 #include <avr/pgmspace.h>
 #include <util/atomic.h>
 #include <util/delay.h>
+#include <avr/io.h>
 #include "../lib/parse.h"
 #include "../lib/uart0_bsd.h"
 #include "../lib/timers_bsd.h"

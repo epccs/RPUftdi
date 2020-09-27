@@ -11,7 +11,8 @@ OBJECTS = main.o \
 	$(LIBDIR)/timers_bsd.o \
 	$(LIBDIR)/parse.o
 
-## Chip and project-specific global definitions
+# Chip and project-specific global definitions
+# VSCode note: avr-gcc will look for device-specs/specs-atmega328pb and use that to define __AVR_DEV_LIB_NAME__ = m328pb
 MCU = atmega328pb
 F_CPU = 12000000UL
 CPPFLAGS = -DF_CPU=$(F_CPU) -I.
@@ -67,6 +68,12 @@ ifndef BOOTLOAD_PORT
 	$(error error no bootload port found $(BOOTLOAD_PORT))
 endif
 	avrdude -v -p $(MCU) -C +$(LIBDIR)/avrdude/328pb.conf -c arduino -P $(BOOTLOAD_PORT) -b 38400 -U flash:w:$(TARGET).hex
+
+hdrcode: ## copy header for VSCode to find run with sudo
+	@echo VSCode will not look outside or cross-origin for an include,  
+	@echo so I have to put the MCU header where it can find it.
+	cp -u ../lib/ATmega_DFP/include/avr/iom328pb.h /usr/lib/avr/include/avr/iom328pb.h
+	chmod u-x /usr/lib/avr/include/avr/iom328pb.h
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@

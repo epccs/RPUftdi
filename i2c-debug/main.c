@@ -32,6 +32,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "i2c1-scan.h"
 #include "i2c1-cmd.h"
 #include "i2c1-monitor.h"
+#include "../BCM24cntl/bcm24.h"
 
 #define BLINK_DELAY 1000UL
 static char rpu_addr;
@@ -97,6 +98,14 @@ void ProcessCmd()
     if ( (strcmp_P( command, PSTR("/i1mon?")) == 0) && (arg_count == 1) )
     {
         I2c1_monitor();
+    }
+    if ( (strcmp_P( command, PSTR("/updi")) == 0) && (arg_count == 0) )
+    {
+        Bcm24_strong_pullup();
+    }
+    if ( (strcmp_P( command, PSTR("/uart")) == 0) && (arg_count == 0) )
+    {
+        Bcm24_strong_pulldown();
     }
 }
 

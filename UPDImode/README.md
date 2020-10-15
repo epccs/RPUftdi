@@ -1,8 +1,8 @@
-# BCM24 Control
+# UPDI mode
 
 ## Overview
 
-The BCM24 pin is used by my PiUPDI board to select serial0 or the UPDI programing pin. PiUPDI has an AVR128DA28 that is programed with [pyupdi].
+The BCM23 and BCM24 pins are used by my PiUPDI board to select serial0 and UPDI programing. PiUPDI has an AVR128DA28 that is programed with [pyupdi].
 
 [pyupdi]: https://github.com/mraardvark/pyupdi/
 

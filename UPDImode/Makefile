@@ -4,7 +4,7 @@
 TARGET = blinkLED
 LIBDIR = ../lib
 OBJECTS = main.o \
-	bcm24.o \
+	mode.o \
 	../i2c-debug/id.o \
 	$(LIBDIR)/twi1_bsd.o \
 	$(LIBDIR)/uart0_bsd.o \

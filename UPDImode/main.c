@@ -1,5 +1,5 @@
 /*
-BCM24cntl is a command line controled demonstration of control of a GPIO pin (where R-Pi's BCM24 pin is)
+UPDImode is a command line controled demonstration of a GPIO pin (where R-Pi's BCM23 and BCM24 pins are)
 Copyright (C) 2016 Ronald Sutherland
 
 Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.
@@ -14,7 +14,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)
 
-BCM24 is used on my PiUPDI board to select UPDI mode or serial mode.
+BCM24 and BCM23 is used on my PiUPDI board to select UPDI mode and serial mode.
 https://github.com/epccs/PiUpdi
 */
 
@@ -30,7 +30,7 @@ https://github.com/epccs/PiUpdi
 #include "../lib/twi1_bsd.h"
 #include "../lib/io_enum_bsd.h"
 #include "../i2c-debug/id.h"
-#include "bcm24.h"
+#include "mode.h"
 
 
 #define BLINK_DELAY 1000UL
@@ -44,11 +44,11 @@ void ProcessCmd()
     }
     if ( (strcmp_P( command, PSTR("/updi")) == 0) && (arg_count == 0) )
     {
-        Bcm24_strong_pullup();
+        UPDI_mode();
     }
     if ( (strcmp_P( command, PSTR("/uart")) == 0) && (arg_count == 0) )
     {
-        Bcm24_strong_pulldown();
+        UART_mode();
     }
 }
 
@@ -61,9 +61,13 @@ void setup(void)
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
     stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
 
-    // BCM24 is used on my PiUPDI board to select UPDI mode or serial mode.
+    // BCM23 is used on my PiUPDI board to select UART mode.
+    ioDir(MCU_IO_BCM23,DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_BCM23,LOGIC_LEVEL_HIGH); // put PiUPDI board in UART mode
+
+    // BCM24 is used on my PiUPDI board to select UPDI mode.
     ioDir(MCU_IO_BCM24,DIRECTION_OUTPUT);
-    ioWrite(MCU_IO_BCM24,LOGIC_LEVEL_LOW); // put PiUPDI board in UART mode
+    ioWrite(MCU_IO_BCM24,LOGIC_LEVEL_LOW); // not in UPDI mode
 
     /* Clear and setup the command buffer, (probably not needed at this point) */
     initCommandBuffer();

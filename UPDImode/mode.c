@@ -20,14 +20,15 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/parse.h"
 #include "../lib/io_enum_bsd.h"
 #include "../i2c-debug/id.h"
-#include "bcm24.h"
+#include "mode.h"
 
-void Bcm24_strong_pullup(void)
+void UPDI_mode(void)
 {
     if (command_done == 10)
     {
-        ioWrite(MCU_IO_BCM24,LOGIC_LEVEL_HIGH);
-        printf_P(PSTR("{\"PiUPDI\":\"UPDI\"}\r\n")); // put PiUPDI board in UPDI mode
+        ioWrite(MCU_IO_BCM23,LOGIC_LEVEL_LOW); // not in UART mode
+        ioWrite(MCU_IO_BCM24,LOGIC_LEVEL_HIGH); // in UPDI mode
+        printf_P(PSTR("{\"PiUPDI\":\"UPDI\"}\r\n"));
         initCommandBuffer();
     }
 
@@ -37,12 +38,13 @@ void Bcm24_strong_pullup(void)
     }
 }
 
-void Bcm24_strong_pulldown(void)
+void UART_mode(void)
 {
     if (command_done == 10)
     {
-        ioWrite(MCU_IO_BCM24,LOGIC_LEVEL_LOW);
-        printf_P(PSTR("{\"PiUPDI\":\"UART\"}\r\n")); // put PiUPDI board in UART mode
+        ioWrite(MCU_IO_BCM23,LOGIC_LEVEL_HIGH); // in UART mode
+        ioWrite(MCU_IO_BCM24,LOGIC_LEVEL_LOW); // not in UPDI mode
+        printf_P(PSTR("{\"PiUPDI\":\"UART\"}\r\n"));
         initCommandBuffer();
     }
 

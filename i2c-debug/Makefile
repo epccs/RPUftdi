@@ -11,7 +11,7 @@ OBJECTS = main.o \
 	i2c0-scan.o \
 	i2c0-cmd.o \
 	id.o \
-	../BCM24cntl/bcm24.o \
+	../UPDImode/mode.o \
 	$(LIBDIR)/timers_bsd.o \
 	$(LIBDIR)/uart0_bsd.o \
 	$(LIBDIR)/twi0_bsd.o \

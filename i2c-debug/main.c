@@ -118,6 +118,14 @@ void setup(void)
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
     stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
 
+    // BCM23 is used on my PiUPDI board to select UART mode.
+    ioDir(MCU_IO_BCM23,DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_BCM23,LOGIC_LEVEL_HIGH); // put PiUPDI board in UART mode
+
+    // BCM24 is used on my PiUPDI board to select UPDI mode.
+    ioDir(MCU_IO_BCM24,DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_BCM24,LOGIC_LEVEL_LOW); // not in UPDI mode
+
     // manager delays (blocks) for 50mSec after power up so i2c is not running yet
     _delay_ms(60); 
 

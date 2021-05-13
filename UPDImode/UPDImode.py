@@ -17,9 +17,10 @@
 import serial, struct, time
 ser = serial.Serial('/dev/ttyUSB1',38400, timeout=3)
 time.sleep(3) # wait for the bootloader to run
-if ser.in_waiting:
-    junk = ser.readline().strip() # clean any junk from the buffer
-    print("junk: " + junk[-10:].decode("utf-8")) 
+while ser.in_waiting > 0: 
+    bootmsg = ser.readline().strip() # report any bootmsg
+    print("bootmsg: " + bootmsg.decode("utf-8"))
+    
 cmd = '/0/updi\n' # the command that will set the PiUPDI board in UPDI mode
 # Python 3 strings are utf-8, they seem to need encode to ascii for Pyserial
 ser.write(cmd.encode('ascii'))

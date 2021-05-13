@@ -17,9 +17,10 @@ ser = serial.Serial('/dev/ttyUSB1',38400, timeout=3)
 
 # we only need to open the port since that will reset the Atmega328pb, which starts in UART mode.
 
-if ser.in_waiting:
-    junk = ser.readline().strip() # clean any junk from the buffer
-    print("junk: " + junk[-10:].decode("utf-8")) 
+while ser.in_waiting > 0: 
+    bootmsg = ser.readline().strip() # report any bootmsg
+    print("bootmsg: " + bootmsg.decode("utf-8"))
+    
 cmd = '/0/uart\n' # the command that would set the PiUPDI board in UART mode if we needed to use it
 
 
